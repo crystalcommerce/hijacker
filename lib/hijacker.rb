@@ -59,7 +59,7 @@ module Hijacker
     end
     
     def render_invalid_db
-      render :text => "You do not appear to have an account with us (#{reqest.host})"
+      render :text => "You do not appear to have an account with us (#{request.host})"
     end
   end
   
