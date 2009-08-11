@@ -1,0 +1,33 @@
+Hijacker
+========
+
+One application, multiple client databases. Although customizable, by default uses a combination of database and regular expression matching againts the host domain to figure out which database to connect to.
+
+Example
+=======
+
+class ApplicationController < ActionController::Base
+  hijack_connection({
+    # First thing it does is look for static routes. If this option
+    # exists and returns a string, it'll use that as the database
+    :static_routes => Proc.new {
+      case RAILS_ENV
+      when "development" then "crystal_development"
+      when "test" then "crystal_test"
+      end
+    },
+    # If it can't find the host in root.databases, it'll try pattern matching.
+    # Grabs $1 after a successful match.
+    :domain_patterns => [
+      /^(.+)\.domain\.com/, /^.+\.(.+)\..+/, /^(.+)\..+/
+    ],
+    :after_hijack => Proc.new {
+      # Classes using acts_as_nested_set load the table info when preloading code in production.
+      # This is wrong 'cause at that point AR is connected to the root database.
+      Category.reset_column_information
+    }
+  })
+end
+
+
+Copyright (c) 2009 Woody Peterson, released under the MIT license
