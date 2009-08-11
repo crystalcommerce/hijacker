@@ -32,7 +32,7 @@ Example
 For copy/pasters, a shorter version:
 
     hijack_connection({
-      :static_routes => Proc.new { "site_#{env}" if !Rails.env == "production" }
+      :static_routes => Proc.new { "site_#{env}" if !Rails.env == "production" },
       :domain_patterns => [/^(.+)\.site\.com/, /^.+\.(.+)\..+/, /^(.+)\..+/],
       :after_hijack => Proc.new { Category.reset_column_information }
     })
