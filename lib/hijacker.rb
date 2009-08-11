@@ -59,8 +59,7 @@ module Hijacker
     end
     
     def render_invalid_db
-      
-      render :text => "You do not appear to have an account with us. To create one, or if you feel that this message is in error, please contact support@crystalcommerce.com"
+      render :text => "You do not appear to have an account with us (#{reqest.host})"
     end
   end
   
