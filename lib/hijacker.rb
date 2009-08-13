@@ -8,61 +8,6 @@ module Hijacker
     attr_accessor :config
   end
 
-  module ControllerClassMethods
-    def hijack_connection(options = {})
-      defaults = {
-        :domain_patterns => []
-      }
-      Hijacker.config = defaults.merge(options)
-
-      self.before_filter :hijack_db_filter
-    end
-  end
-
-  module ControllerInstanceMethods
-    def hijack_db_filter
-      host = request.host
-    
-      database = determine_database(host)
-    
-      Hijacker.connect(database)
-    rescue Hijacker::InvalidDatabase => e
-      render_invalid_db
-    
-      # If we've encountered a bad database connection, we don't want
-      # to continue rendering the rest of the before_filters on this, which it will
-      # try to do even when just rendering the bit of text above. If any filters
-      # return false, though, it will halt the filter chain.
-      return false
-    end
-  
-    def determine_database(host)
-      static = Hijacker.config[:static_routes].call if Hijacker.config[:static_routes]
-      return static if static
-      
-      sanitized_host = ActiveRecord::Base.connection.quote(host)
-      database = Hijacker.root_connection.select_values(
-        "SELECT databases.database FROM `databases`, domains
-        WHERE domains.domain=#{sanitized_host}
-        AND domains.database_id=databases.id"
-      ).first
-    
-      # if it's not defined in root_connection.databases, let's try pattern matching
-      if database.nil?
-        Hijacker.config[:domain_patterns].find {|pattern| host =~ pattern}
-        database = $1
-      end
-    
-      raise Hijacker::UnparseableURL unless database
-    
-      return database
-    end
-    
-    def render_invalid_db
-      render :text => "You do not appear to have an account with us (#{request.host})"
-    end
-  end
-  
   # Manually establishes a new connection to the database.
   # 
   # Background: every time rails gets information
@@ -79,15 +24,15 @@ module Hijacker
     hijacked_config[:database] = db
     ActiveRecord::Base.establish_connection(hijacked_config)
     
-    # just calling hijack_db doesn't actually check to see if
+    # just calling establish_connection doesn't actually check to see if
     # we've established a VALID connection. a call to connection will check
     # this, and throw an error if the connection's invalid. It is important 
     # to catch the error and reconnect to a known valid database or rails
     # will get stuck. This is because once we establish a connection to an
     # invalid database, the next request will do a courteousy touch to the
-    # invalid database before reaching hijack_db and throw an error, preventing
-    # us from retrying to establish a valid connection and effectively locking
-    # us out of the app.
+    # invalid database before reaching establish_connection and throw an error,
+    # preventing us from retrying to establish a valid connection and effectively
+    # locking us out of the app.
     begin
       ActiveRecord::Base.connection
     rescue
@@ -109,10 +54,28 @@ module Hijacker
     self.config[:after_hijack].call if self.config[:after_hijack]
   rescue => e
     self.establish_root_connection
-    
     raise e
   end
-
+  
+  # very small change this will raise, but if it does, we still want to treat it the
+  # same as connect so we don't lock up the app
+  def self.connect_sister_site_models(db)
+    return if db.nil?
+    
+    self.config[:sister_site_models].each do |model_name|
+      ar_model = model_name.constantize
+      model_name.constantize.establish_connection(self.root_connection.config.merge(:database => db))
+      begin
+        ar_model.connection
+      rescue
+        raise Hijacker::InvalidDatabase, db
+      end
+    end
+  rescue => e
+    self.establish_root_connection
+    raise e
+  end
+  
   # maintains and returns a live (i.e. guarunteed to not be dead) connection
   # to the "dummy" database. 
   # 
@@ -145,9 +108,4 @@ module Hijacker
   def self.database
     ActiveRecord::Base.connection.current_database
   end
-end
-
-class ActionController::Base
-  include Hijacker::ControllerInstanceMethods
-  extend Hijacker::ControllerClassMethods
 end
