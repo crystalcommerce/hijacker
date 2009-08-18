@@ -16,9 +16,10 @@ module Hijacker::ControllerMethods
       host = request.host
   
       master, sister = determine_databases(host)
-  
-      Hijacker.connect(master)
-      Hijacker.connect_sister_site_models(sister)
+
+      Hijacker.connect(master, sister)
+      
+      return true
     rescue Hijacker::InvalidDatabase => e
       render_invalid_db
   
@@ -29,7 +30,8 @@ module Hijacker::ControllerMethods
       return false
     end
 
-    # Returns 2-member array of the main database to connect to, and the sister.
+    # Returns 2-member array of the main database to connect to, and the sister
+    # (sister will be nil if no master is found, which means we are on the master).
     def determine_databases(host)
       client = Hijacker.config[:static_routes].call if Hijacker.config[:static_routes]
     
@@ -37,8 +39,9 @@ module Hijacker::ControllerMethods
       client ||= $1
       raise Hijacker::UnparseableURL if client.nil?
     
-      master = Hijacker::Database.find_master_for(client) || client
-      sister = client
+      master = Hijacker::Database.find_master_for(client)
+      sister = master.nil? ? nil : client
+      master ||= client
   
       return [master, sister]
     end

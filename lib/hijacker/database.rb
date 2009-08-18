@@ -1,6 +1,8 @@
 class Hijacker::Database < ActiveRecord::Base
   establish_connection(Hijacker.root_connection.config)
 
+  validates_uniqueness_of :database
+
   # returns a string or nil
   def self.find_master_for(client)
     client = ActiveRecord::Base.connection.quote(client)

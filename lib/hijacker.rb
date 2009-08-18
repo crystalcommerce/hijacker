@@ -5,7 +5,7 @@ module Hijacker
   class InvalidDatabase < StandardError;end
   
   class << self
-    attr_accessor :config
+    attr_accessor :config, :master, :sister
   end
 
   # Manually establishes a new connection to the database.
@@ -19,9 +19,9 @@ module Hijacker
   # 
   # Note that you can manually call this from script/console (or wherever)
   # to connect to the database you want, ex Hijacker.connect("database")
-  def self.connect(db)
+  def self.connect(master, sister = nil)
     hijacked_config = self.root_connection.config.dup
-    hijacked_config[:database] = db
+    hijacked_config[:database] = master
     ActiveRecord::Base.establish_connection(hijacked_config)
     
     # just calling establish_connection doesn't actually check to see if
@@ -35,9 +35,14 @@ module Hijacker
     # locking us out of the app.
     begin
       ActiveRecord::Base.connection
-    rescue
-      raise Hijacker::InvalidDatabase, db
+    rescue => e
+      raise Hijacker::InvalidDatabase, master
     end
+    
+    self.connect_sister_site_models(sister || master)
+    
+    self.master = master
+    self.sister = sister
     
     # This is a hack to get query caching back on. For some reason when we
     # reconnect the database during the request, it stops doing query caching.
@@ -68,12 +73,19 @@ module Hijacker
       begin
         ar_model.connection
       rescue
+        ar_model.establish_connection(self.root_connection.config)
         raise Hijacker::InvalidDatabase, db
       end
     end
-  rescue => e
-    self.establish_root_connection
-    raise e
+  end
+
+  # connects the sister_site_models to +db+ while calling the block
+  # if +db+ and self.master differ
+  def self.temporary_sister_connect(db, &block)
+    processing_sister_site = (db != self.master && db != self.sister)
+    self.connect_sister_site_models(db) if processing_sister_site
+    block.call
+    self.connect_sister_site_models(self.master) if processing_sister_site
   end
   
   # maintains and returns a live (i.e. guarunteed to not be dead) connection
@@ -105,7 +117,11 @@ module Hijacker
     ActiveRecord::Base.establish_connection(self.root_connection.config)
   end
   
-  def self.database
-    ActiveRecord::Base.connection.current_database
+  def self.processing_sister_site?
+    !sister.nil?
+  end
+  
+  def self.current_client
+    sister || master
   end
 end
