@@ -20,8 +20,10 @@ module Hijacker
   # Note that you can manually call this from script/console (or wherever)
   # to connect to the database you want, ex Hijacker.connect("database")
   def self.connect(master, sister = nil)
+    raise InvalidDatabase, 'master cannot be nil' if master.nil?
+    
     hijacked_config = self.root_connection.config.dup
-    hijacked_config[:database] = master
+    hijacked_config[:database] = (sister || master)
     ActiveRecord::Base.establish_connection(hijacked_config)
     
     # just calling establish_connection doesn't actually check to see if
@@ -39,10 +41,10 @@ module Hijacker
       raise Hijacker::InvalidDatabase, master
     end
     
-    self.connect_sister_site_models(sister || master)
-    
     self.master = master
     self.sister = sister
+    
+    self.connect_sister_site_models(master)
     
     # This is a hack to get query caching back on. For some reason when we
     # reconnect the database during the request, it stops doing query caching.
@@ -62,19 +64,30 @@ module Hijacker
     raise e
   end
   
-  # very small change this will raise, but if it does, we still want to treat it the
-  # same as connect so we don't lock up the app
+  # very small chance this will raise, but if it does, we will still handle it the
+  # same as +Hijacker.connect+ so we don't lock up the app.
+  # 
+  # Also note that sister site models share a connection via minor management of
+  # AR's connection_pool stuff, and will use ActiveRecord::Base.connection_pool if
+  # we're not in a sister-site situation
   def self.connect_sister_site_models(db)
     return if db.nil?
     
+    sister_db_connection_pool = self.processing_sister_site? ? nil : ActiveRecord::Base.connection_pool
     self.config[:sister_site_models].each do |model_name|
       ar_model = model_name.constantize
-      model_name.constantize.establish_connection(self.root_connection.config.merge(:database => db))
-      begin
-        ar_model.connection
-      rescue
-        ar_model.establish_connection(self.root_connection.config)
-        raise Hijacker::InvalidDatabase, db
+      
+      if !sister_db_connection_pool
+        ar_model.establish_connection(self.root_connection.config.merge(:database => db))
+        begin
+          ar_model.connection
+        rescue
+          ar_model.establish_connection(self.root_connection.config)
+          raise Hijacker::InvalidDatabase, db
+        end
+        sister_db_connection_pool = ar_model.connection_pool
+      else
+        ActiveRecord::Base.connection_handler.connection_pools[model_name] = sister_db_connection_pool
       end
     end
   end
@@ -83,9 +96,12 @@ module Hijacker
   # if +db+ and self.master differ
   def self.temporary_sister_connect(db, &block)
     processing_sister_site = (db != self.master && db != self.sister)
+    self.sister = db if processing_sister_site
     self.connect_sister_site_models(db) if processing_sister_site
-    block.call
+    result = block.call
     self.connect_sister_site_models(self.master) if processing_sister_site
+    self.sister = nil if processing_sister_site
+    return result
   end
   
   # maintains and returns a live (i.e. guarunteed to not be dead) connection
@@ -100,21 +116,23 @@ module Hijacker
   # pages).
   def self.root_connection
     if !$hijacker_root_connection
-      ActiveRecord::Base.establish_connection # establish with defaults
+      ActiveRecord::Base.establish_connection(self.root_config) # establish with defaults
       $hijacker_root_connection = ActiveRecord::Base.connection
     end
-    
-    if $hijacker_root_connection.raw_connection.stat == "MySQL server has gone away"
-      $hijacker_root_connection.reconnect!
-    end
-    
+
+    $hijacker_root_connection.reconnect! if !$hijacker_root_connection.active?
+      
     return $hijacker_root_connection
+  end
+  
+  def self.root_config
+    ActiveRecord::Base.configurations[RAILS_ENV]
   end
   
   # this should establish a connection to a database containing the bare minimum
   # for loading the app, usually a sessions table if using sql-based sessions.
   def self.establish_root_connection
-    ActiveRecord::Base.establish_connection(self.root_connection.config)
+    ActiveRecord::Base.establish_connection(self.root_config)
   end
   
   def self.processing_sister_site?

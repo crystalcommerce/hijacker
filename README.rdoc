@@ -1,7 +1,7 @@
 Hijacker
 ========
 
-One application, multiple client databases. Although customizable, by default uses a combination of database and regular expression matching againts the host domain to figure out which database to connect to.
+One application, multiple client databases. Although customizable, by default uses a combination of database and regular expression matching against the host domain to figure out which database to connect to.
 
 Example
 =======

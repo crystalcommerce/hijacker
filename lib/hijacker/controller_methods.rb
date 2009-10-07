@@ -1,18 +1,6 @@
 module Hijacker::ControllerMethods
-  module Class
-    def hijack_connection(options = {})
-      defaults = {
-        :domain_patterns => [],
-        :sister_site_models => []
-      }
-      Hijacker.config = defaults.merge(options)
-
-      self.before_filter :hijack_db_filter
-    end
-  end
-
   module Instance
-    def hijack_db_filter
+    def hijack_connection
       host = request.host
   
       master, sister = determine_databases(host)
@@ -37,17 +25,15 @@ module Hijacker::ControllerMethods
     
       Hijacker.config[:domain_patterns].find {|pattern| host =~ pattern}
       client ||= $1
-      raise Hijacker::UnparseableURL if client.nil?
+      raise Hijacker::UnparseableURL, "cannot parse '#{host}'" if client.nil?
     
-      master = Hijacker::Database.find_master_for(client)
-      sister = master.nil? ? nil : client
-      master ||= client
+      master, sister = Hijacker::Database.find_master_and_sister_for(client)
   
       return [master, sister]
     end
   
     def render_invalid_db
-      render :text => "You do not appear to have an account with us (#{reqest.host})"
+      render :text => "You do not appear to have an account with us (#{request.host})"
     end
   end
 end
