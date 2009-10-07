@@ -5,5 +5,4 @@ require 'hijacker/controller_methods'
 
 class ActionController::Base
   include Hijacker::ControllerMethods::Instance
-  extend Hijacker::ControllerMethods::Class
 end
