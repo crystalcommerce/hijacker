@@ -13,11 +13,11 @@ module Hijacker
       end
 
       it "Calls the block once for each database" do
-        counter = OpenStruct.new(:count => 0)
+        count = 0
         Database.connect_each do |db|
-          counter.count += 1
+          count += 1
         end
-        counter.count.should == Database.all.size
+        count.should == Database.all.size
       end
 
       it "Passes the name of the database to the block" do
