@@ -37,4 +37,11 @@ class Hijacker::Database < ActiveRecord::Base
       WHERE master_id = '#{master_id}' OR id = '#{master_id}'"
     )
   end
+
+  def self.connect_each
+    all.each do |client|
+      Hijacker.connect(client.database)
+      yield client.database
+    end
+  end
 end
