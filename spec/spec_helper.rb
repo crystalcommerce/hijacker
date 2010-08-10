@@ -3,10 +3,12 @@ require 'test/unit'
 require 'active_support'
 require 'active_support/test_case'
 require 'ruby-debug'
- 
-require 'activerecord'
-require File.dirname(__FILE__) + '/../lib/hijacker'
- 
+
+require 'active_record'
+
+$:.unshift '../lib'
+require 'hijacker'
+
 RAILS_ENV="test"
 
 ActiveRecord::Base.configurations = {
