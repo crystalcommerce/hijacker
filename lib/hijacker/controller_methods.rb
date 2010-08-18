@@ -21,10 +21,14 @@ module Hijacker::ControllerMethods
     # Returns 2-member array of the main database to connect to, and the sister
     # (sister will be nil if no master is found, which means we are on the master).
     def determine_databases(host)
-      client = Hijacker.config[:static_routes].call if Hijacker.config[:static_routes]
-    
-      Hijacker.config[:domain_patterns].find {|pattern| host =~ pattern}
-      client ||= $1
+      hosted_environments = Hijacker.config[:hosted_environments] || ['staging','production']
+      if hosted_environments.include?(Rails.env)
+        Hijacker.config[:domain_patterns].find {|pattern| host =~ pattern}
+        client = $1
+      else # development, test, etc
+        client = ActiveRecord::Base.configurations[Rails.env]['database']
+      end
+
       raise Hijacker::UnparseableURL, "cannot parse '#{host}'" if client.nil?
     
       master, sister = Hijacker::Database.find_master_and_sister_for(client)

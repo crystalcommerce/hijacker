@@ -21,6 +21,13 @@ module Hijacker
   # to connect to the database you want, ex Hijacker.connect("database")
   def self.connect(master, sister = nil)
     raise InvalidDatabase, 'master cannot be nil' if master.nil?
+
+    return if (current_client == master &&
+               self.sister == sister &&
+               ['test', 'cucumber'].include?(RAILS_ENV))
+
+    master.downcase!
+    sister.downcase! unless sister.nil?
     
     hijacked_config = self.root_connection.config.dup
     hijacked_config[:database] = (sister || master)
@@ -104,8 +111,7 @@ module Hijacker
     return result
   end
   
-  # maintains and returns a live (i.e. guarunteed to not be dead) connection
-  # to the "dummy" database. 
+  # maintains and returns a connection to the "dummy" database.
   # 
   # The advantage of using this over just calling
   # ActiveRecord::Base.establish_connection (without arguments) to reconnect
@@ -114,29 +120,36 @@ module Hijacker
   # the database. It may seem trivial, but it actually seems to speed things
   # up by ~ 1/3 for already fast requests (probably less noticeable on slower
   # pages).
+  # 
+  # Note: does not hijack, just returns the root connection (i.e. AR::Base will
+  # maintain its connection)
   def self.root_connection
     if !$hijacker_root_connection
-      ActiveRecord::Base.establish_connection(self.root_config) # establish with defaults
+      current_config = ActiveRecord::Base.connection.config
+      ActiveRecord::Base.establish_connection('root') # establish with defaults
       $hijacker_root_connection = ActiveRecord::Base.connection
+      ActiveRecord::Base.establish_connection(current_config) # reconnect, we don't intend to hijack
     end
 
-    $hijacker_root_connection.reconnect! if !$hijacker_root_connection.active?
-      
     return $hijacker_root_connection
   end
   
   def self.root_config
-    ActiveRecord::Base.configurations[RAILS_ENV]
+    ActiveRecord::Base.configurations['root']
   end
   
   # this should establish a connection to a database containing the bare minimum
   # for loading the app, usually a sessions table if using sql-based sessions.
   def self.establish_root_connection
-    ActiveRecord::Base.establish_connection(self.root_config)
+    ActiveRecord::Base.establish_connection('root')
   end
   
   def self.processing_sister_site?
     !sister.nil?
+  end
+  
+  def self.master
+    @master || ActiveRecord::Base.configurations[Rails.env]['database']
   end
   
   def self.current_client

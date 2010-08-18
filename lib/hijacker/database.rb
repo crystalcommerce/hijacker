@@ -2,7 +2,11 @@ class Hijacker::Database < ActiveRecord::Base
   establish_connection(Hijacker.root_config)
 
   validates_uniqueness_of :database
-
+  
+  def self.current
+    find(:first, :conditions => {:database => Hijacker.current_client})
+  end
+  
   # returns a string or nil
   def self.find_master_for(client)
     client = ActiveRecord::Base.connection.quote(client)
