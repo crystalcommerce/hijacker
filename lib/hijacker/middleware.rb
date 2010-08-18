@@ -5,8 +5,8 @@ module Hijacker
     end
 
     def call(env)
-      if env['x-hijacker-db']
-        Hijacker.connect(env['x-hijacker-db'])
+      if env['X-Hijacker-DB']
+        Hijacker.connect(env['X-Hijacker-DB'])
       end
       @app.call(env)
     end
