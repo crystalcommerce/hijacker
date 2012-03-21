@@ -11,7 +11,6 @@ Gem::Specification.new do |s|
   s.description = %q{Allows a single Rails appliation to access many different databases}
   s.email = %q{developers@crystalcommerce.com}
   s.add_dependency("rails", "~>2.3.14")
-  s.add_dependency("activerecord", "~>2.3.14")
   s.add_development_dependency("rake", "~>0.9.2")
   s.add_development_dependency("rack-test", "~>0.6.1")
   s.add_development_dependency("rack", "~>1.1.0")
