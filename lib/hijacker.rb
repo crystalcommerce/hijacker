@@ -1,4 +1,6 @@
 require 'hijacker/active_record_ext'
+require 'active_record'
+require 'action_controller'
 
 module Hijacker
   class UnparseableURL < StandardError;end
@@ -6,6 +8,7 @@ module Hijacker
 
   class << self
     attr_accessor :config, :master, :sister
+    attr_writer :valid_routes
   end
 
   def self.valid_routes
@@ -30,36 +33,25 @@ module Hijacker
   def self.connect(master, sister = nil, options = {})
     raise InvalidDatabase, 'master cannot be nil' if master.nil?
 
-    return if (current_client == master &&
-               self.sister == sister &&
-               ['test', 'cucumber'].include?(RAILS_ENV))
-
-    verify_default = Hijacker.do_hijacking? ? true : false
-    options = {:verify => verify_default}.merge(options)
-
     master = master.downcase
     sister = sister.downcase unless sister.nil?
 
+    return if already_connected?(master, sister) || test?
+
+    verify_default = Hijacker.do_hijacking?
+    options = {:verify => verify_default}.merge(options)
+
     unless db_name = sister || valid_routes[master]
-      db_name = master if !options[:verify]
+      db_name = master unless options[:verify]
       db_name ||= Alias.find_by_name(master).try(:database).try(:database)
       db_name ||= Hijacker::Database.find_by_database(master).try(:database)
       raise(Hijacker::InvalidDatabase, master) if db_name.nil?
     end
 
     hijacked_config = self.root_connection.config.dup
-    ActiveRecord::Base.establish_connection(hijacked_config.merge(:database => db_name))
+    ::ActiveRecord::Base.establish_connection(hijacked_config.merge(:database => db_name))
 
-    # just calling establish_connection doesn't actually check to see if
-    # we've established a VALID connection. a call to connection will check
-    # this, and throw an error if the connection's invalid. It is important 
-    # to catch the error and reconnect to a known valid database or rails
-    # will get stuck. This is because once we establish a connection to an
-    # invalid database, the next request will do a courteousy touch to the
-    # invalid database before reaching establish_connection and throw an error,
-    # preventing us from retrying to establish a valid connection and effectively
-    # locking us out of the app.
-    ActiveRecord::Base.connection
+    check_connection
 
     self.master = db_name
     self.sister = sister
@@ -77,15 +69,23 @@ module Hijacker
     # instance variable in the connection, AR will from then on build on that
     # empty @query_cache hash. You have to do both 'cuz without the latter there
     # will be no @query_cache available. Maybe someday we'll submit a ticket to Rails.
-    if ActionController::Base.perform_caching
-      ActiveRecord::Base.connection.instance_variable_set("@query_cache_enabled", true)
-      ActiveRecord::Base.connection.cache do;end
+    if ::ActionController::Base.perform_caching
+      ::ActiveRecord::Base.connection.instance_variable_set("@query_cache_enabled", true)
+      ::ActiveRecord::Base.connection.cache do;end
     end
     
     self.config[:after_hijack].call if self.config[:after_hijack]
   rescue => e
     self.establish_root_connection
     raise e
+  end
+
+  def self.already_connected?(new_master, new_sister)
+    current_client == new_master && sister == new_sister
+  end
+
+  def self.test?
+    ['test', 'cucumber'].include?(RAILS_ENV)
   end
   
   # very small chance this will raise, but if it does, we will still handle it the
@@ -174,8 +174,21 @@ module Hijacker
   end
 
   def self.do_hijacking?
-    (Hijacker.config[:hosted_environments] || ['staging','production']).
+    (Hijacker.config[:hosted_environments] || %w[staging production]).
       include?(ENV['RAILS_ENV'])
+  end
+
+  # just calling establish_connection doesn't actually check to see if
+  # we've established a VALID connection. a call to connection will check
+  # this, and throw an error if the connection's invalid. It is important 
+  # to catch the error and reconnect to a known valid database or rails
+  # will get stuck. This is because once we establish a connection to an
+  # invalid database, the next request will do a courteousy touch to the
+  # invalid database before reaching establish_connection and throw an error,
+  # preventing us from retrying to establish a valid connection and effectively
+  # locking us out of the app.
+  def self.check_connection
+    ::ActiveRecord::Base.connection
   end
 end
 

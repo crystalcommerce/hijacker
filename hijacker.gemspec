@@ -12,11 +12,11 @@ Gem::Specification.new do |s|
   s.date = %q{2009-11-18}
   s.description = %q{Allows a single Rails appliation to access many different databases}
   s.email = %q{woody@crystalcommerce.com}
-  s.add_dependency("activesupport", "~>2.3.14")
+  s.add_dependency("rails", "~>2.3.14")
   s.add_dependency("activerecord", "~>2.3.14")
   s.add_development_dependency("rake", "~>0.9.2")
   s.add_development_dependency("rack-test", "~>0.6.1")
-  s.add_development_dependency("rack", "~>1.4.1")
+  s.add_development_dependency("rack", "~>1.1.0")
   s.add_development_dependency("rspec", "~>2.8.0")
   s.add_development_dependency("sqlite3", "~>1.3.5")
   s.add_development_dependency("ruby-debug", "~>0.10.4")
