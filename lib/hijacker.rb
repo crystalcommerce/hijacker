@@ -3,9 +3,17 @@ require 'hijacker/active_record_ext'
 module Hijacker
   class UnparseableURL < StandardError;end
   class InvalidDatabase < StandardError;end
-  
+
   class << self
     attr_accessor :config, :master, :sister
+  end
+
+  def self.valid_routes
+    @valid_routes ||= {}
+  end
+
+  def self.connect_to_master(db_name)
+    connect(*Hijacker::Database.find_master_and_sister_for(db_name))
   end
 
   # Manually establishes a new connection to the database.
@@ -19,20 +27,29 @@ module Hijacker
   # 
   # Note that you can manually call this from script/console (or wherever)
   # to connect to the database you want, ex Hijacker.connect("database")
-  def self.connect(master, sister = nil)
+  def self.connect(master, sister = nil, options = {})
     raise InvalidDatabase, 'master cannot be nil' if master.nil?
 
     return if (current_client == master &&
                self.sister == sister &&
                ['test', 'cucumber'].include?(RAILS_ENV))
 
-    master.downcase!
-    sister.downcase! unless sister.nil?
-    
+    verify_default = Hijacker.do_hijacking? ? true : false
+    options = {:verify => verify_default}.merge(options)
+
+    master = master.downcase
+    sister = sister.downcase unless sister.nil?
+
+    unless db_name = sister || valid_routes[master]
+      db_name = master if !options[:verify]
+      db_name ||= Alias.find_by_name(master).try(:database).try(:database)
+      db_name ||= Hijacker::Database.find_by_database(master).try(:database)
+      raise(Hijacker::InvalidDatabase, master) if db_name.nil?
+    end
+
     hijacked_config = self.root_connection.config.dup
-    hijacked_config[:database] = (sister || master)
-    ActiveRecord::Base.establish_connection(hijacked_config)
-    
+    ActiveRecord::Base.establish_connection(hijacked_config.merge(:database => db_name))
+
     # just calling establish_connection doesn't actually check to see if
     # we've established a VALID connection. a call to connection will check
     # this, and throw an error if the connection's invalid. It is important 
@@ -42,15 +59,15 @@ module Hijacker
     # invalid database before reaching establish_connection and throw an error,
     # preventing us from retrying to establish a valid connection and effectively
     # locking us out of the app.
-    begin
-      ActiveRecord::Base.connection
-    rescue => e
-      raise Hijacker::InvalidDatabase, master
-    end
-    
-    self.master = master
+    ActiveRecord::Base.connection
+
+    self.master = db_name
     self.sister = sister
-    
+
+    unless sister # don't cache sister site
+      valid_routes[master] ||= db_name
+    end
+
     self.connect_sister_site_models(master)
     
     # This is a hack to get query caching back on. For some reason when we
@@ -155,4 +172,12 @@ module Hijacker
   def self.current_client
     sister || master
   end
+
+  def self.do_hijacking?
+    (Hijacker.config[:hosted_environments] || ['staging','production']).
+      include?(Rails.env)
+  end
 end
+
+require 'hijacker/database'
+require 'hijacker/alias'

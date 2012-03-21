@@ -21,8 +21,7 @@ module Hijacker::ControllerMethods
     # Returns 2-member array of the main database to connect to, and the sister
     # (sister will be nil if no master is found, which means we are on the master).
     def determine_databases(host)
-      hosted_environments = Hijacker.config[:hosted_environments] || ['staging','production']
-      if hosted_environments.include?(Rails.env)
+      if Hijacker.do_hijacking?
         Hijacker.config[:domain_patterns].find {|pattern| host =~ pattern}
         client = $1
       else # development, test, etc
