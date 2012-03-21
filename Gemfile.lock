@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    hijacker (0.1.0)
+    hijacker (0.2.0)
       activerecord (~> 2.3.14)
       rails (~> 2.3.14)
 
