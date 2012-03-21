@@ -32,11 +32,14 @@ module Hijacker
         db_names.should == Database.all.map(&:database)
       end
 
-      it "Should connect to each of the database" do
-        Hijacker.should_receive(:connect).exactly(Database.all.size).times
+      it "connects to each of the database and reconnects to the original" do
+        original_db = Hijacker::Database.current
+        Hijacker.should_receive(:connect).exactly(Database.all.size + 1).times
         Database.connect_each do |db|
           # noop
         end
+
+        Hijacker::Database.current.should == original_db
       end
     end
   end

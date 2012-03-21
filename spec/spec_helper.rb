@@ -19,3 +19,9 @@ ActiveRecord::Base.establish_connection
 require File.dirname(__FILE__) + "/../example_root_schema"
 
 require 'hijacker'
+
+RSpec.configure do |config|
+  config.before(:each) do
+    Hijacker::Database.destroy_all
+  end
+end
