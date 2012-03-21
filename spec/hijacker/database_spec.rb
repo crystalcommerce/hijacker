@@ -2,6 +2,10 @@ require "spec_helper"
 
 module Hijacker
   describe Database do
+    it "has many aliases" do
+      lambda { subject.aliases }.should_not raise_error
+    end
+
     describe "#connect_each" do
       def db(name)
         mock("#{name}_db", :database => name)

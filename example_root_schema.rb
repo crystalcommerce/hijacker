@@ -3,6 +3,14 @@ ActiveRecord::Schema.define(:version => 1) do
     t.string "database"
     t.integer "master_id"
   end
-  
+
+  add_index "databases", "database"
   add_index "databases", "master_id"
+
+  create_table "aliases", :force => true do |t|
+    t.integer "database_id"
+    t.string "name"
+  end
+
+  add_index "aliases", "name"
 end
