@@ -9,16 +9,21 @@ describe Hijacker do
     } 
   end
 
-  let!(:master) { Hijacker::Database.create(:database => "master_db") }
+  let!(:host) { Hijacker::Host.create!(:hostname => "localhost") }
+  let!(:master) { Hijacker::Database.create!(:database => "master_db", :host => host) }
 
   describe ".find_shared_sites_for" do
     let!(:sister) {Hijacker::Database.create(:database => "sister_db",
-                                             :master => master)}
+                                             :master => master,
+                                             :host => host)}
     let!(:sister2) {Hijacker::Database.create(:database => "sister_db2",
-                                              :master => master)}
-    let!(:unrelated) {Hijacker::Database.create(:database => "unrelated_db")}
+                                              :master => master,
+                                              :host => host)}
+    let!(:unrelated) {Hijacker::Database.create(:database => "unrelated_db",
+                                                :host => host)}
     let!(:unrelated_sister) {Hijacker::Database.create(:database => "unrelated_sister",
-                                                       :master => unrelated)}
+                                                       :master => unrelated,
+                                                       :host => host)}
 
     it "find shared sites given a master or sister database" do
       dbs = ["master_db","sister_db","sister_db2"]
@@ -32,7 +37,6 @@ describe Hijacker do
 
     describe ".connect" do
       let(:perform_caching) { false }
-
 
       before(:each) do
         subject.master = nil
@@ -52,7 +56,7 @@ describe Hijacker do
       end
 
       it "establishes a connection merging in the db name"  do
-        Hijacker::Database.create!(:database => 'elsewhere')
+        Hijacker::Database.create!(:database => 'elsewhere', :host => host)
         ActiveRecord::Base.should_receive(:establish_connection).
           with({:database => 'elsewhere'})
         subject.connect('elsewhere')
@@ -121,7 +125,8 @@ describe Hijacker do
 
       context "sister site specified" do
         let!(:sister_db) { Hijacker::Database.create!(:database => 'sister_db',
-                                                      :master => master)}
+                                                      :master => master,
+                                                      :host => host)}
         it "does reconnect if specifying a different sister" do
           ActiveRecord::Base.should_receive(:establish_connection)
           subject.connect('master_db', 'sister_db')

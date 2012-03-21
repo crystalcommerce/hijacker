@@ -31,14 +31,17 @@ Gem::Specification.new do |s|
     hijacker.gemspec
     init.rb
     install.rb
+    lib/db-hijacker.rb
     lib/hijacker.rb
     lib/hijacker/active_record_ext.rb
     lib/hijacker/alias.rb
     lib/hijacker/controller_methods.rb
     lib/hijacker/database.rb
+    lib/hijacker/host.rb
     lib/hijacker/middleware.rb
     spec/hijacker/alias_spec.rb
     spec/hijacker/database_spec.rb
+    spec/hijacker/host_spec.rb
     spec/hijacker/middleware_spec.rb
     spec/hijacker_spec.rb
     spec/spec_helper.rb
@@ -52,6 +55,7 @@ Gem::Specification.new do |s|
   s.test_files = %w{
     spec/hijacker/alias_spec.rb
     spec/hijacker/database_spec.rb
+    spec/hijacker/host_spec.rb
     spec/hijacker/middleware_spec.rb
     spec/hijacker_spec.rb
     spec/spec_helper.rb

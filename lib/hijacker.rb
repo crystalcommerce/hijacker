@@ -216,3 +216,4 @@ end
 
 require 'hijacker/database'
 require 'hijacker/alias'
+require 'hijacker/host'

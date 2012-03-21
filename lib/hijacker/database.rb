@@ -1,11 +1,14 @@
 class Hijacker::Database < ActiveRecord::Base
   establish_connection(Hijacker.root_config)
 
-  validates_uniqueness_of :database
-
   has_many :aliases, :class_name => "Hijacker::Alias"
   belongs_to :master, :foreign_key => 'master_id', :class_name => 'Hijacker::Database'
   has_many :sisters, :foreign_key => 'master_id', :class_name => 'Hijacker::Database'
+  belongs_to :host, :class_name => "Hijacker::Host"
+
+  validates_uniqueness_of :database
+
+  validates_presence_of :host_id
 
   def self.current
     find(:first, :conditions => {:database => Hijacker.current_client})

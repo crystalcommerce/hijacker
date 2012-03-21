@@ -1,7 +1,8 @@
-ActiveRecord::Schema.define(:version => 1) do
+ActiveRecord::Schema.define(:version => 2) do
   create_table "databases", :force => true do |t|
     t.string "database"
     t.integer "master_id"
+    t.integer "host_id"
   end
 
   add_index "databases", "database"
@@ -13,4 +14,8 @@ ActiveRecord::Schema.define(:version => 1) do
   end
 
   add_index "aliases", "name"
+
+  create_table "hosts", :force => true do |t|
+    t.string "hostname"
+  end
 end
