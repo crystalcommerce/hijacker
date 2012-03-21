@@ -30,54 +30,36 @@ module Hijacker
   # 
   # Note that you can manually call this from script/console (or wherever)
   # to connect to the database you want, ex Hijacker.connect("database")
-  def self.connect(master, sister = nil, options = {})
-    raise InvalidDatabase, 'master cannot be nil' if master.nil?
+  def self.connect(target_name, sister_name = nil, options = {})
+    raise InvalidDatabase, 'master cannot be nil' if target_name.nil?
 
-    master = master.downcase
-    sister = sister.downcase unless sister.nil?
+    target_name = target_name.downcase
+    sister_name = sister_name.downcase unless sister_name.nil?
 
-    return if already_connected?(master, sister) || test?
+    return if already_connected?(target_name, sister_name) || test?
 
-    verify_default = Hijacker.do_hijacking?
-    options = {:verify => verify_default}.merge(options)
+    verify = options.fetch(:verify, Hijacker.do_hijacking?)
 
-    unless db_name = sister || valid_routes[master]
-      db_name = master unless options[:verify]
-      db_name ||= Alias.find_by_name(master).try(:database).try(:database)
-      db_name ||= Hijacker::Database.find_by_database(master).try(:database)
-      raise(Hijacker::InvalidDatabase, master) if db_name.nil?
-    end
+    db_name = determine_database_name(target_name, sister_name, verify)
 
-    hijacked_config = self.root_connection.config.dup
-    ::ActiveRecord::Base.establish_connection(hijacked_config.merge(:database => db_name))
+    establish_connection_to_database(db_name)
 
     check_connection
 
     self.master = db_name
-    self.sister = sister
+    self.sister = sister_name
 
-    unless sister # don't cache sister site
-      valid_routes[master] ||= db_name
-    end
+    # don't cache sister site
+    cache_database_route(target_name, db_name) unless sister_name
 
-    self.connect_sister_site_models(master)
+    connect_sister_site_models(target_name)
     
-    # This is a hack to get query caching back on. For some reason when we
-    # reconnect the database during the request, it stops doing query caching.
-    # We couldn't find how it's used by rails originally, but if you turn on
-    # query caching then start a cache block to initialize the @query_cache
-    # instance variable in the connection, AR will from then on build on that
-    # empty @query_cache hash. You have to do both 'cuz without the latter there
-    # will be no @query_cache available. Maybe someday we'll submit a ticket to Rails.
-    if ::ActionController::Base.perform_caching
-      ::ActiveRecord::Base.connection.instance_variable_set("@query_cache_enabled", true)
-      ::ActiveRecord::Base.connection.cache do;end
-    end
+    reenable_query_caching
     
     self.config[:after_hijack].call if self.config[:after_hijack]
-  rescue => e
+  rescue
     self.establish_root_connection
-    raise e
+    raise
   end
 
   def self.already_connected?(new_master, new_sister)
@@ -189,6 +171,46 @@ module Hijacker
   # locking us out of the app.
   def self.check_connection
     ::ActiveRecord::Base.connection
+  end
+
+private
+
+  def self.determine_database_name(target_name, sister_name, verify)
+    if sister_name
+      raise(Hijacker::InvalidDatabase, sister_name) unless Hijacker::Database.exists?(:database => sister_name)
+      db_name = sister_name
+    elsif valid_routes[target_name]
+      db_name = valid_routes[target_name] # cached valid name
+    else
+      db_name = target_name unless verify
+      db_name ||= Hijacker::Alias.find_by_name(target_name).try(:database).try(:database)
+      db_name ||= Hijacker::Database.find_by_database(target_name).try(:database)
+      raise(Hijacker::InvalidDatabase, target_name) if db_name.nil?
+    end
+    db_name
+  end
+
+  def self.cache_database_route(requested_db_name, actual_db_name)
+    valid_routes[requested_db_name] ||= actual_db_name
+  end
+
+  def self.establish_connection_to_database(db_name)
+    hijacked_config = self.root_connection.config.dup
+    ::ActiveRecord::Base.establish_connection(hijacked_config.merge(:database => db_name))
+  end
+
+  # This is a hack to get query caching back on. For some reason when we
+  # reconnect the database during the request, it stops doing query caching.
+  # We couldn't find how it's used by rails originally, but if you turn on
+  # query caching then start a cache block to initialize the @query_cache
+  # instance variable in the connection, AR will from then on build on that
+  # empty @query_cache hash. You have to do both 'cuz without the latter there
+  # will be no @query_cache available. Maybe someday we'll submit a ticket to Rails.
+  def self.reenable_query_caching
+    if ::ActionController::Base.perform_caching
+      ::ActiveRecord::Base.connection.instance_variable_set("@query_cache_enabled", true)
+      ::ActiveRecord::Base.connection.cache do;end
+    end
   end
 end
 

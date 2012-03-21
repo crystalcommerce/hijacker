@@ -22,6 +22,7 @@ require 'hijacker'
 
 RSpec.configure do |config|
   config.before(:each) do
-    Hijacker::Database.destroy_all
+    Hijacker::Database.delete_all
+    Hijacker::Alias.delete_all
   end
 end

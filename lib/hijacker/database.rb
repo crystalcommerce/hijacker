@@ -4,6 +4,8 @@ class Hijacker::Database < ActiveRecord::Base
   validates_uniqueness_of :database
 
   has_many :aliases, :class_name => "Hijacker::Alias"
+  belongs_to :master, :foreign_key => 'master_id', :class_name => 'Hijacker::Database'
+  has_many :sisters, :foreign_key => 'master_id', :class_name => 'Hijacker::Database'
 
   def self.current
     find(:first, :conditions => {:database => Hijacker.current_client})
