@@ -166,7 +166,7 @@ module Hijacker
   end
   
   def self.master
-    @master || ActiveRecord::Base.configurations[Rails.env]['database']
+    @master || ActiveRecord::Base.configurations[ENV['RAILS_ENV']]['database']
   end
   
   def self.current_client
@@ -175,7 +175,7 @@ module Hijacker
 
   def self.do_hijacking?
     (Hijacker.config[:hosted_environments] || ['staging','production']).
-      include?(Rails.env)
+      include?(ENV['RAILS_ENV'])
   end
 end
 

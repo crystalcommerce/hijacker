@@ -18,7 +18,7 @@ module Hijacker
       context "When the 'X-Hijacker-DB' header is set" do
         it "connects to the database from the header" do
           Hijacker.should_receive(:connect).with("sample-db")
-          get '/',{}, 'X-Hijacker-DB' => 'sample-db'
+          get '/',{}, 'HTTP_X_HIJACKER_DB' => 'sample-db'
         end
       end
 

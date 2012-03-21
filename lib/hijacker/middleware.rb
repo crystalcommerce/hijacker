@@ -6,7 +6,6 @@ module Hijacker
 
     def call(env)
       if env['HTTP_X_HIJACKER_DB'].present?
-        log.debug "HTTP_X_HIJACKER_DB hijacking to #{env['HTTP_X_HIJACKER_DB']}"
         begin
           Hijacker.connect(env['HTTP_X_HIJACKER_DB'])
         rescue Hijacker::InvalidDatabase => e

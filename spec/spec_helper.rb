@@ -6,6 +6,7 @@ require 'ruby-debug'
 require 'active_record'
 
 RAILS_ENV="test"
+ENV['RAILS_ENV'] = 'test'
 $:.unshift '../lib'
 ActiveRecord::Base.configurations = {
   "test" => {
