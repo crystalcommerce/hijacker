@@ -57,4 +57,11 @@ Other parts of database.yml will remain the same (development, test) but product
 apps will initially start up on this root database, then hijack when the first connection
 comes in.
 
-Copyright (c) 2009 Woody Peterson, released under the MIT license
+Running tests
+=============
+
+To run the tests, just invoke RSpec:
+
+    rspec spec
+
+Copyright (c) 2012 Michael Xavier, Donald Plummer, Woody Peterson, released under the MIT license
