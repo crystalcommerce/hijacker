@@ -38,7 +38,8 @@ class Hijacker::Database < ActiveRecord::Base
     self.connection.select_values(
       "SELECT database
       FROM `databases`
-      WHERE master_id = '#{master_id}' OR id = '#{master_id}'"
+      WHERE master_id = '#{master_id}' OR id = '#{master_id}'
+      ORDER BY id"
     )
   end
 
