@@ -62,14 +62,6 @@ module Hijacker
     raise
   end
 
-  def self.already_connected?(new_master, new_sister)
-    current_client == new_master && sister == new_sister
-  end
-
-  def self.test?
-    ['test', 'cucumber'].include?(RAILS_ENV)
-  end
-  
   # very small chance this will raise, but if it does, we will still handle it the
   # same as +Hijacker.connect+ so we don't lock up the app.
   # 
@@ -123,7 +115,7 @@ module Hijacker
   # Note: does not hijack, just returns the root connection (i.e. AR::Base will
   # maintain its connection)
   def self.root_connection
-    if !$hijacker_root_connection
+    unless $hijacker_root_connection
       current_config = ActiveRecord::Base.connection.config
       ActiveRecord::Base.establish_connection('root') # establish with defaults
       $hijacker_root_connection = ActiveRecord::Base.connection
@@ -173,7 +165,15 @@ module Hijacker
     ::ActiveRecord::Base.connection
   end
 
+  def self.test?
+    ['test', 'cucumber'].include?(RAILS_ENV)
+  end
+
 private
+
+  def self.already_connected?(new_master, new_sister)
+    current_client == new_master && sister == new_sister
+  end
 
   def self.determine_database_name(target_name, sister_name, verify)
     if sister_name
