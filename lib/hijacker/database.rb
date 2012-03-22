@@ -10,6 +10,12 @@ class Hijacker::Database < ActiveRecord::Base
 
   validates_presence_of :host_id
 
+  alias_attribute :name, :database
+
+  def self.find_by_name(name)
+    find_by_database(name)
+  end
+
   def self.current
     find(:first, :conditions => {:database => Hijacker.current_client})
   end

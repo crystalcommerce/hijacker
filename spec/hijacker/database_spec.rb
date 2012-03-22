@@ -24,6 +24,18 @@ module Hijacker
       subject.should be_valid
     end
 
+    it "aliases name to database" do
+      subject.database = "foo"
+      subject.name.should == "foo"
+      subject.name = "bar"
+      subject.database.should == "bar"
+    end
+
+    it "aliases find_by_name to find_by_database" do
+      Hijacker::Database.should_receive(:find_by_database).with("foo")
+      Hijacker::Database.find_by_name("foo")
+    end
+
     describe "#connect_each" do
       def db(name)
         mock("#{name}_db", :database => name)

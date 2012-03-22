@@ -55,10 +55,10 @@ describe Hijacker do
         expect { subject.connect(nil) }.to raise_error(Hijacker::InvalidDatabase)
       end
 
-      it "establishes a connection merging in the db name"  do
+      it "establishes a connection merging in the db name and the hostname"  do
         Hijacker::Database.create!(:database => 'elsewhere', :host => host)
         ActiveRecord::Base.should_receive(:establish_connection).
-          with({:database => 'elsewhere'})
+          with({:database => 'elsewhere', :host => "localhost"})
         subject.connect('elsewhere')
       end
 
@@ -80,9 +80,9 @@ describe Hijacker do
       context "there's an alias for the master" do
         let!(:alias_db) { Hijacker::Alias.create(:name => 'alias_db', :database => master)}
 
-        it "connects with the alias" do
+        it "connects with the alias to the master and the host" do
           ActiveRecord::Base.should_receive(:establish_connection).
-            with({:database => 'master_db'})
+            with({:database => 'master_db', :host => "localhost"})
           subject.connect('alias_db')
         end
 

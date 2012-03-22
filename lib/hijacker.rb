@@ -40,17 +40,17 @@ module Hijacker
 
     verify = options.fetch(:verify, Hijacker.do_hijacking?)
 
-    db_name = determine_database_name(target_name, sister_name, verify)
+    database = determine_database(target_name, sister_name, verify)
 
-    establish_connection_to_database(db_name)
+    establish_connection_to_database(database)
 
     check_connection
 
-    self.master = db_name
+    self.master = database.name
     self.sister = sister_name
 
     # don't cache sister site
-    cache_database_route(target_name, db_name) unless sister_name
+    cache_database_route(target_name, database.name) unless sister_name
 
     connect_sister_site_models(target_name)
     
@@ -175,28 +175,29 @@ private
     current_client == new_master && sister == new_sister
   end
 
-  def self.determine_database_name(target_name, sister_name, verify)
+  def self.determine_database(target_name, sister_name, verify)
     if sister_name
-      raise(Hijacker::InvalidDatabase, sister_name) unless Hijacker::Database.exists?(:database => sister_name)
-      db_name = sister_name
+      database = Hijacker::Database.find_by_name(sister_name)
+      raise(Hijacker::InvalidDatabase, sister_name) if database.nil?
+      database
     elsif valid_routes[target_name]
-      db_name = valid_routes[target_name] # cached valid name
+      valid_routes[target_name] # cached valid database
     else
-      db_name = target_name unless verify
-      db_name ||= Hijacker::Alias.find_by_name(target_name).try(:database).try(:database)
-      db_name ||= Hijacker::Database.find_by_database(target_name).try(:database)
-      raise(Hijacker::InvalidDatabase, target_name) if db_name.nil?
+      database = Hijacker::Alias.find_by_name(target_name).try(:database) ||
+                 Hijacker::Database.find_by_name(target_name)
+      raise(Hijacker::InvalidDatabase, target_name) if database.nil?
+      database
     end
-    db_name
   end
 
-  def self.cache_database_route(requested_db_name, actual_db_name)
-    valid_routes[requested_db_name] ||= actual_db_name
+  def self.cache_database_route(requested_db_name, actual_database)
+    valid_routes[requested_db_name] ||= actual_database
   end
 
-  def self.establish_connection_to_database(db_name)
+  def self.establish_connection_to_database(database)
     hijacked_config = self.root_connection.config.dup
-    ::ActiveRecord::Base.establish_connection(hijacked_config.merge(:database => db_name))
+    ::ActiveRecord::Base.establish_connection(hijacked_config.merge(:database => database.name,
+                                                                    :host => database.host.hostname))
   end
 
   # This is a hack to get query caching back on. For some reason when we
