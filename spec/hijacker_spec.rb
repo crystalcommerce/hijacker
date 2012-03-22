@@ -74,7 +74,7 @@ describe Hijacker do
 
       it "caches the valid route at the class level :(" do
         subject.connect('master_db')
-        subject.valid_routes['master_db'].should == 'master_db'
+        subject.valid_routes['master_db'].should == master
       end
 
       context "there's an alias for the master" do
@@ -88,7 +88,7 @@ describe Hijacker do
 
         it "caches the valid route at the class level :(" do
           subject.connect('alias_db')
-          subject.valid_routes['alias_db'].should == 'master_db'
+          subject.valid_routes['alias_db'].should == master
         end
       end
 

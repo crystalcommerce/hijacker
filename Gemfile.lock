@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    db-hijacker (0.3.1)
+    dbhijacker (0.3.1)
       rails (~> 2.3.14)
 
 GEM
@@ -52,7 +52,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  db-hijacker!
+  dbhijacker!
   rack (~> 1.1.0)
   rack-test (~> 0.6.1)
   rake (~> 0.9.2)

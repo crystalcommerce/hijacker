@@ -84,6 +84,19 @@ class Hijacker::Database < ActiveRecord::Base
     end
   end
 
+  def self.count_each(&blk)
+    acc = {}
+    connect_each do |db|
+      count = blk.call
+      acc[db] = count if count > 0
+    end
+    width = acc.keys.map(&:length).max
+    acc.sort_by(&:last).each do |db, count|
+      puts("%#{width}s: %s" % [db, count])
+    end
+    acc
+  end
+
   def self.disabled_databases
     Hijacker::Database.connection.select_values("SELECT `database_name` FROM `disabled_databases`")
   end

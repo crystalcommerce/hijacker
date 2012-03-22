@@ -50,7 +50,7 @@ module Hijacker
     self.sister = sister_name
 
     # don't cache sister site
-    cache_database_route(target_name, database.name) unless sister_name
+    cache_database_route(target_name, database) unless sister_name
 
     connect_sister_site_models(target_name)
     
@@ -218,3 +218,5 @@ end
 require 'hijacker/database'
 require 'hijacker/alias'
 require 'hijacker/host'
+require 'hijacker/middleware'
+require 'hijacker/controller_methods'

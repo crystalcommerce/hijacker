@@ -29,14 +29,18 @@ module Hijacker::ControllerMethods
       end
 
       raise Hijacker::UnparseableURL, "cannot parse '#{host}'" if client.nil?
-    
+
       master, sister = Hijacker::Database.find_master_and_sister_for(client)
-  
+
       return [master, sister]
     end
-  
+
     def render_invalid_db
       render :text => "You do not appear to have an account with us (#{request.host})"
     end
   end
+end
+
+class ActionController::Base
+  include Hijacker::ControllerMethods::Instance
 end

@@ -1,7 +1,7 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = %q{db-hijacker}
+  s.name = %q{dbhijacker}
   s.homepage = "https://github.com/crystalcommerce/hijacker"
   s.version = "0.3.1"
 
