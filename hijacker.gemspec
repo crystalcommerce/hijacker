@@ -31,7 +31,7 @@ Gem::Specification.new do |s|
     hijacker.gemspec
     init.rb
     install.rb
-    lib/db-hijacker.rb
+    lib/dbhijacker.rb
     lib/hijacker.rb
     lib/hijacker/active_record_ext.rb
     lib/hijacker/alias.rb
