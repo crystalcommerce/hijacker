@@ -140,7 +140,7 @@ module Hijacker
   end
   
   def self.master
-    @master || ActiveRecord::Base.configurations[ENV['RAILS_ENV']]['database']
+    @master || ActiveRecord::Base.configurations[ENV['RAILS_ENV'] || RAILS_ENV]['database']
   end
   
   def self.current_client
