@@ -73,7 +73,11 @@ class Hijacker::Database < ActiveRecord::Base
     original_database = Hijacker.current_client
     begin
       sites.each do |db|
-        Hijacker.connect_to_master(db)
+        begin
+          Hijacker.connect_to_master(db)
+        rescue Hijacker::InvalidDatabase
+          next
+        end
         yield db
       end
     ensure

@@ -71,6 +71,11 @@ module Hijacker
 
         Hijacker::Database.current.should == original_db
       end
+
+      it "eats invalid database errors" do
+        Hijacker.stub!(:connect).and_raise(Hijacker::InvalidDatabase)
+        expect { Database.connect_each {|db| } }.not_to raise_error
+      end
     end
   end
 end
