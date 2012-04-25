@@ -42,7 +42,6 @@ describe Hijacker do
         subject.master = nil
         subject.sister = nil
         subject.valid_routes = {}
-        subject.stub(:test?).and_return(false)
         ActiveRecord::Base.stub(:establish_connection)
         subject.stub(:root_connection).and_return(stub(:config => {}))
         subject.stub(:connect_sister_site_models)

@@ -12,6 +12,10 @@ class Hijacker::Database < ActiveRecord::Base
 
   alias_attribute :name, :database
 
+  def sister?
+    master_id.present?
+  end
+
   def self.find_by_name(name)
     find_by_database(name)
   end

@@ -36,7 +36,10 @@ module Hijacker
     target_name = target_name.downcase
     sister_name = sister_name.downcase unless sister_name.nil?
 
-    return if already_connected?(target_name, sister_name) || test?
+    if already_connected?(target_name, sister_name)
+      return "Already connected to #{target_name}"
+    end
+    puts "CONNECTING TO (#{target_name}, #{sister_name})"
 
     verify = options.fetch(:verify, Hijacker.do_hijacking?)
 
@@ -46,8 +49,13 @@ module Hijacker
 
     check_connection
 
-    self.master = database.name
-    self.sister = sister_name
+    if database.sister?
+      self.master = database.master.name
+      self.sister = database.name
+    else
+      self.master = database.name
+      self.sister = nil
+    end
 
     # don't cache sister site
     cache_database_route(target_name, database) unless sister_name
@@ -163,10 +171,6 @@ module Hijacker
   # locking us out of the app.
   def self.check_connection
     ::ActiveRecord::Base.connection
-  end
-
-  def self.test?
-    ['test', 'cucumber'].include?(RAILS_ENV)
   end
 
 private
