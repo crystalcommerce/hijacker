@@ -39,7 +39,6 @@ module Hijacker
     if already_connected?(target_name, sister_name)
       return "Already connected to #{target_name}"
     end
-    puts "CONNECTING TO (#{target_name}, #{sister_name})"
 
     verify = options.fetch(:verify, Hijacker.do_hijacking?)
 
