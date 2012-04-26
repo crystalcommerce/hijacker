@@ -77,17 +77,18 @@ module Hijacker
   # we're not in a sister-site situation
   def self.connect_sister_site_models(db)
     return if db.nil?
-    
+    database = Hijacker::Database.find_by_database(db)
+
     sister_db_connection_pool = self.processing_sister_site? ? nil : ActiveRecord::Base.connection_pool
     self.config[:sister_site_models].each do |model_name|
       ar_model = model_name.constantize
-      
+
       if !sister_db_connection_pool
-        ar_model.establish_connection(self.root_connection.config.merge(:database => db))
+        ar_model.establish_connection(connection_config(database))
         begin
           ar_model.connection
         rescue
-          ar_model.establish_connection(self.root_connection.config)
+          ar_model.establish_connection(root_config)
           raise Hijacker::InvalidDatabase, db
         end
         sister_db_connection_pool = ar_model.connection_pool
@@ -131,9 +132,9 @@ module Hijacker
 
     return $hijacker_root_connection
   end
-  
+
   def self.root_config
-    ActiveRecord::Base.configurations['root']
+    ActiveRecord::Base.configurations['root'].with_indifferent_access
   end
   
   # this should establish a connection to a database containing the bare minimum
@@ -198,9 +199,7 @@ private
   end
 
   def self.establish_connection_to_database(database)
-    hijacked_config = self.root_connection.config.dup
-    ::ActiveRecord::Base.establish_connection(hijacked_config.merge(:database => database.name,
-                                                                    :host => database.host.hostname))
+    ::ActiveRecord::Base.establish_connection(connection_config(database))
   end
 
   # This is a hack to get query caching back on. For some reason when we
@@ -215,6 +214,11 @@ private
       ::ActiveRecord::Base.connection.instance_variable_set("@query_cache_enabled", true)
       ::ActiveRecord::Base.connection.cache do;end
     end
+  end
+
+  def self.connection_config(database)
+    root_config.merge('database' => database.name,
+                      'host' => database.host.hostname)
   end
 end
 

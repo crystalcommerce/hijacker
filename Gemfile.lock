@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    dbhijacker (0.4.3)
+    dbhijacker (0.4.4)
       rails (~> 2.3.14)
 
 GEM

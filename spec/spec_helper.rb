@@ -9,6 +9,10 @@ RAILS_ENV="test"
 ENV['RAILS_ENV'] = 'test'
 $:.unshift '../lib'
 ActiveRecord::Base.configurations = {
+  "root" => {
+    :adapter => 'sqlite3',
+    :database => File.dirname(__FILE__) + "/test_database.sqlite3"
+  },
   "test" => {
     :adapter => 'sqlite3',
     :database => File.dirname(__FILE__) + "/test_database.sqlite3"
