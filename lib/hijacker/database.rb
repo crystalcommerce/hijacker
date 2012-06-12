@@ -1,4 +1,31 @@
+#Dummy exceptions if driver not loaded
+if !defined?(Mysql2)
+  module Mysql2
+    class Error < StandardError
+      attr_accessor :errno
+    end
+  end
+end
+
+if !defined?(Mysql)
+  module Mysql
+    class Error < StandardError
+      attr_accessor :errno
+    end
+  end
+end
+
 class Hijacker::Database < ActiveRecord::Base
+  module MissingDatabaseError
+    MYSQL_UNKNOWN_DB_ERRNO = 1049
+
+    def self.===(e)
+      return true if e.is_a?(Hijacker::InvalidDatabase)
+      (e.is_a?(Mysql::Error) || e.is_a?(Mysql2::Error)) &&
+        e.errno == MYSQL_UNKNOWN_DB_ERRNO
+    end
+  end
+
   establish_connection(Hijacker.root_config)
 
   has_many :aliases, :class_name => "Hijacker::Alias"
@@ -11,6 +38,7 @@ class Hijacker::Database < ActiveRecord::Base
   validates_presence_of :host_id
 
   alias_attribute :name, :database
+
 
   def sister?
     master_id.present?
@@ -79,7 +107,7 @@ class Hijacker::Database < ActiveRecord::Base
       sites.each do |db|
         begin
           Hijacker.connect_to_master(db)
-        rescue Hijacker::InvalidDatabase
+        rescue MissingDatabaseError
           next
         end
         yield db
@@ -87,7 +115,7 @@ class Hijacker::Database < ActiveRecord::Base
     ensure
       begin
         Hijacker.connect_to_master(original_database)
-      rescue Hijacker::InvalidDatabase
+      rescue MissingDatabaseError
       end
     end
   end
@@ -117,5 +145,10 @@ class Hijacker::Database < ActiveRecord::Base
   def enable!
     Hijacker::Database.connection.
       execute("DELETE FROM `disabled_databases` WHERE `database_name` = '#{database}'")
+  end
+
+private
+  def self.catch_missing_database(&block)
+    block.call
   end
 end

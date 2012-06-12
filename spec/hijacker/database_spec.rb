@@ -65,16 +65,32 @@ module Hijacker
       it "connects to each of the database and reconnects to the original" do
         original_db = Hijacker::Database.current
         Hijacker.should_receive(:connect).exactly(Database.all.size + 1).times
-        Database.connect_each do |db|
-          # noop
-        end
+        Database.connect_each {}
 
         Hijacker::Database.current.should == original_db
       end
 
       it "eats invalid database errors" do
-        Hijacker.stub!(:connect).and_raise(Hijacker::InvalidDatabase)
+        Hijacker.stub(:connect).and_raise(Hijacker::InvalidDatabase)
         expect { Database.connect_each {|db| } }.not_to raise_error
+      end
+      
+      it "eats mysql-specific errors for missing databases" do
+        [Mysql::Error, Mysql2::Error].each do |klass|
+          exception = klass.new("Unknown database 'fake'")
+          exception.errno = 1049
+          Hijacker.stub(:connect).and_raise(exception)
+          expect { Database.connect_each {} }.to_not raise_error
+        end
+      end
+
+      it "does not eat unrelated mysql-specific databases" do
+        [Mysql::Error, Mysql2::Error].each do |klass|
+          exception = klass.new("WAT")
+          exception.errno = 2000
+          Hijacker.stub(:connect).and_raise(exception)
+          expect { Database.connect_each {} }.to raise_error(klass)
+        end
       end
     end
   end
