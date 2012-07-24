@@ -31,42 +31,50 @@ module Hijacker
   # Note that you can manually call this from script/console (or wherever)
   # to connect to the database you want, ex Hijacker.connect("database")
   def self.connect(target_name, sister_name = nil, options = {})
-    raise InvalidDatabase, 'master cannot be nil' if target_name.nil?
+    original_database = Hijacker::Database.current
 
-    target_name = target_name.downcase
-    sister_name = sister_name.downcase unless sister_name.nil?
+    begin
+      raise InvalidDatabase, 'master cannot be nil' if target_name.nil?
 
-    if already_connected?(target_name, sister_name)
-      return "Already connected to #{target_name}"
+      target_name = target_name.downcase
+      sister_name = sister_name.downcase unless sister_name.nil?
+
+      if already_connected?(target_name, sister_name)
+        return "Already connected to #{target_name}"
+      end
+
+      verify = options.fetch(:verify, Hijacker.do_hijacking?)
+
+      database = determine_database(target_name, sister_name, verify)
+
+      establish_connection_to_database(database)
+
+      check_connection
+
+      if database.sister?
+        self.master = database.master.name
+        self.sister = database.name
+      else
+        self.master = database.name
+        self.sister = nil
+      end
+
+      # don't cache sister site
+      cache_database_route(target_name, database) unless sister_name
+
+      connect_sister_site_models(target_name)
+
+      reenable_query_caching
+
+      self.config[:after_hijack].call if self.config[:after_hijack]
+    rescue
+      if original_database.present?
+        establish_connection_to_database(original_database)
+      else
+        self.establish_root_connection
+      end
+      raise
     end
-
-    verify = options.fetch(:verify, Hijacker.do_hijacking?)
-
-    database = determine_database(target_name, sister_name, verify)
-
-    establish_connection_to_database(database)
-
-    check_connection
-
-    if database.sister?
-      self.master = database.master.name
-      self.sister = database.name
-    else
-      self.master = database.name
-      self.sister = nil
-    end
-
-    # don't cache sister site
-    cache_database_route(target_name, database) unless sister_name
-
-    connect_sister_site_models(target_name)
-    
-    reenable_query_caching
-    
-    self.config[:after_hijack].call if self.config[:after_hijack]
-  rescue
-    self.establish_root_connection
-    raise
   end
 
   # very small chance this will raise, but if it does, we will still handle it the
