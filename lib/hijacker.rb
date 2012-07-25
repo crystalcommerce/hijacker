@@ -86,21 +86,16 @@ module Hijacker
     return true unless defined?(ActiveRecord::ConnectionAdapters::Mysql2Adapter) && ActiveRecord::Base.connection.is_a?(ActiveRecord::ConnectionAdapters::Mysql2Adapter)
 
     @host_connections ||= {}
-    current_host = Host.connection.config['host']
 
-    begin
-      existing_dbs = Host.all.inject(Set.new) do |acc, host|
-        @host_connections[host.hostname] ||= Mysql2::Client.new(root_config.merge('host' => host.hostname))
-        @host_connections[host.hostname].query("SHOW DATABASES").each do |row|
-          acc << row['Database']
-        end
-        acc
+    existing_dbs = Host.all.inject(Set.new) do |acc, host|
+      @host_connections[host.hostname] ||= Mysql2::Client.new(root_config.merge('host' => host.hostname))
+      @host_connections[host.hostname].query("SHOW DATABASES").each do |row|
+        acc << row['Database']
       end
-
-      existing_dbs.include?(database_name)
-    ensure
-      Host.establish_connection(root_config.merge('host' => current_host))
+      acc
     end
+
+    existing_dbs.include?(database_name)
   end
 
   # very small chance this will raise, but if it does, we will still handle it the

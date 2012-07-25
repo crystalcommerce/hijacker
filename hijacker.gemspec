@@ -3,7 +3,7 @@
 Gem::Specification.new do |s|
   s.name = %q{dbhijacker}
   s.homepage = "https://github.com/crystalcommerce/hijacker"
-  s.version = "0.5.0"
+  s.version = "0.5.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Michael Xavier", "Donald Plummer", "Woody Peterson"]
