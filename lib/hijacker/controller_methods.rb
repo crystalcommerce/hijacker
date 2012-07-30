@@ -36,7 +36,8 @@ module Hijacker::ControllerMethods
     end
 
     def render_invalid_db
-      render :text => "You do not appear to have an account with us (#{request.host})"
+      render :text => "You do not appear to have an account with us (#{request.host})",
+        :status => 404
     end
   end
 end
