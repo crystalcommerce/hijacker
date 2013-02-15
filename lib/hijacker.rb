@@ -165,23 +165,27 @@ module Hijacker
   end
 
   def self.root_config
-    ActiveRecord::Base.configurations['root'].with_indifferent_access
+    database_configurations.fetch('root').with_indifferent_access
   end
-  
+
+  def self.database_configurations
+    ActiveRecord::Base.configurations
+  end
+
   # this should establish a connection to a database containing the bare minimum
   # for loading the app, usually a sessions table if using sql-based sessions.
   def self.establish_root_connection
     ActiveRecord::Base.establish_connection('root')
   end
-  
+
   def self.processing_sister_site?
     !sister.nil?
   end
-  
+
   def self.master
-    @master || ActiveRecord::Base.configurations[ENV['RAILS_ENV'] || RAILS_ENV]['database']
+    @master || database_configurations.fetch(ENV['RAILS_ENV'] || RAILS_ENV)['database']
   end
-  
+
   def self.current_client
     sister || master
   end

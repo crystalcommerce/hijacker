@@ -3,14 +3,14 @@
 Gem::Specification.new do |s|
   s.name = %q{dbhijacker}
   s.homepage = "https://github.com/crystalcommerce/hijacker"
-  s.version = "0.6.1"
+  s.version = "0.7.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Michael Xavier", "Donald Plummer", "Woody Peterson"]
   s.date = %q{2012-03-21}
   s.description = %q{Allows a single Rails appliation to access many different databases}
   s.email = %q{developers@crystalcommerce.com}
-  s.add_dependency("rails", "~>2.3.14")
+  s.add_dependency("rails", ">= 2.3.14")
   s.add_development_dependency("rake", "~>0.9.2")
   s.add_development_dependency("rack-test", "~>0.6.1")
   s.add_development_dependency("rack", "~>1.1.0")
