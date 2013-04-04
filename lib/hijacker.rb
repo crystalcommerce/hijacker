@@ -90,7 +90,8 @@ module Hijacker
     aliases = Hijacker::Alias.all(:select => :name).map(&:name)
 
     existing_dbs = Host.all.inject(Set.new(aliases)) do |acc, host|
-      @host_connections[host.hostname] ||= Mysql2::Client.new(root_config.merge('host' => host.hostname))
+      @host_connections[host.hostname] ||= Mysql2::Client.new(root_config.merge('host' => host.hostname,
+                                                                                'database' => nil))
       @host_connections[host.hostname].query("SHOW DATABASES").each do |row|
         acc << row['Database']
       end
