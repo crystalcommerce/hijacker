@@ -40,10 +40,6 @@ module Hijacker
       target_name = target_name.downcase
       sister_name = sister_name.downcase unless sister_name.nil?
 
-      unless database_exists?(target_name)
-        raise InvalidDatabase, 'database does not exist'
-      end
-
       if already_connected?(target_name, sister_name)
         return "Already connected to #{target_name}"
       end
@@ -80,25 +76,6 @@ module Hijacker
       end
       raise
     end
-  end
-
-  def self.database_exists?(database_name)
-    return true unless defined?(ActiveRecord::ConnectionAdapters::Mysql2Adapter) && ActiveRecord::Base.connection.is_a?(ActiveRecord::ConnectionAdapters::Mysql2Adapter)
-
-    @host_connections ||= {}
-
-    aliases = Hijacker::Alias.all(:select => :name).map(&:name)
-
-    existing_dbs = Host.all.inject(Set.new(aliases)) do |acc, host|
-      @host_connections[host.hostname] ||= Mysql2::Client.new(root_config.merge('host' => host.hostname,
-                                                                                'database' => nil))
-      @host_connections[host.hostname].query("SHOW DATABASES").each do |row|
-        acc << row['Database']
-      end
-      acc
-    end
-
-    existing_dbs.include?(database_name)
   end
 
   # very small chance this will raise, but if it does, we will still handle it the
