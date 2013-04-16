@@ -1,13 +1,13 @@
 require 'rubygems'
 require 'active_support'
 require 'active_support/test_case'
-require 'ruby-debug'
-
 require 'active_record'
 
-RAILS_ENV="test"
+RAILS_ENV = "test"
 ENV['RAILS_ENV'] = 'test'
+
 $:.unshift '../lib'
+
 ActiveRecord::Base.configurations = {
   "root" => {
     :adapter => 'sqlite3',
