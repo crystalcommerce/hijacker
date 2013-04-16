@@ -10,7 +10,7 @@ module Hijacker
     def app
       Rack::Builder.new do
         use Hijacker::Middleware
-        run lambda { |env| [200, { 'blah' => 'blah' }, "success"] }
+        run lambda { |env| [200, { 'blah' => 'blah' }, ["success"]] }
       end
     end
 
