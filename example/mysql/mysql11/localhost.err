@@ -1,0 +1,330 @@
+130416 16:36:06 mysqld_safe Starting mysqld daemon with databases from tmp/mysql11
+130416 16:36:06 [Warning] The syntax '--log-slow-queries' is deprecated and will be removed in a future release. Please use '--slow-query-log'/'--slow-query-log-file' instead.
+130416 16:36:06 [Warning] Can't create test file /usr/tmp/mysql11/localhost.lower-test
+130416 16:36:06 [Warning] Can't create test file /usr/tmp/mysql11/localhost.lower-test
+/usr/bin/mysqld: Can't change dir to '/usr/tmp/mysql11/' (Errcode: 2)
+130416 16:36:06 [ERROR] Aborting
+
+130416 16:36:06 [Note] /usr/bin/mysqld: Shutdown complete
+
+130416 16:36:06 mysqld_safe mysqld from pid file tmp/mysql11/tmp/mysql.11.pid ended
+130416 16:37:37 mysqld_safe Starting mysqld daemon with databases from /home/dplummer/src/hijacker/tmp/mysql11
+130416 16:37:37 [Warning] The syntax '--log-slow-queries' is deprecated and will be removed in a future release. Please use '--slow-query-log'/'--slow-query-log-file' instead.
+/usr/bin/mysqld: Table 'mysql.plugin' doesn't exist
+130416 16:37:37 [ERROR] Can't open the mysql.plugin table. Please run mysql_upgrade to create it.
+130416 16:37:37 InnoDB: The InnoDB memory heap is disabled
+130416 16:37:37 InnoDB: Mutexes and rw_locks use GCC atomic builtins
+130416 16:37:37 InnoDB: Compressed tables use zlib 1.2.7
+130416 16:37:37 InnoDB: Using Linux native AIO
+130416 16:37:37 InnoDB: Initializing buffer pool, size = 2.0G
+130416 16:37:38 InnoDB: Completed initialization of buffer pool
+130416 16:37:38  InnoDB: Operating system error number 13 in a file operation.
+InnoDB: The error means mysqld does not have the access rights to
+InnoDB: the directory.
+InnoDB: File name /var/lib/mysql/ibdata1
+InnoDB: File operation call: 'open'.
+InnoDB: Cannot continue operation.
+130416 16:37:38 mysqld_safe mysqld from pid file /home/dplummer/src/hijacker/tmp/mysql.11.pid ended
+130416 16:41:45 mysqld_safe Starting mysqld daemon with databases from /home/dplummer/src/hijacker/tmp/mysql11
+130416 16:41:45 [Warning] The syntax '--log-slow-queries' is deprecated and will be removed in a future release. Please use '--slow-query-log'/'--slow-query-log-file' instead.
+/usr/bin/mysqld: Table 'mysql.plugin' doesn't exist
+130416 16:41:45 [ERROR] Can't open the mysql.plugin table. Please run mysql_upgrade to create it.
+130416 16:41:45 InnoDB: The InnoDB memory heap is disabled
+130416 16:41:45 InnoDB: Mutexes and rw_locks use GCC atomic builtins
+130416 16:41:45 InnoDB: Compressed tables use zlib 1.2.7
+130416 16:41:45 InnoDB: Using Linux native AIO
+130416 16:41:45 InnoDB: Initializing buffer pool, size = 2.0G
+130416 16:41:45 InnoDB: Completed initialization of buffer pool
+InnoDB: The first specified data file /home/dplummer/src/hijacker/tmp/mysql11/ibdata1 did not exist:
+InnoDB: a new database to be created!
+130416 16:41:45  InnoDB: Setting file /home/dplummer/src/hijacker/tmp/mysql11/ibdata1 size to 128 MB
+InnoDB: Database physically writes the file full: wait...
+InnoDB: Progress in MB: 100
+130416 16:41:47  InnoDB: Log file /home/dplummer/src/hijacker/tmp/mysql11/ib_logfile0 did not exist: new to be created
+InnoDB: Setting log file /home/dplummer/src/hijacker/tmp/mysql11/ib_logfile0 size to 128 MB
+InnoDB: Database physically writes the file full: wait...
+InnoDB: Progress in MB: 100
+130416 16:41:47  InnoDB: Log file /home/dplummer/src/hijacker/tmp/mysql11/ib_logfile1 did not exist: new to be created
+InnoDB: Setting log file /home/dplummer/src/hijacker/tmp/mysql11/ib_logfile1 size to 128 MB
+InnoDB: Database physically writes the file full: wait...
+InnoDB: Progress in MB: 100
+InnoDB: Doublewrite buffer not found: creating new
+InnoDB: Doublewrite buffer created
+InnoDB: 127 rollback segment(s) active.
+InnoDB: Creating foreign key constraint system tables
+InnoDB: Foreign key constraint system tables created
+130416 16:41:48  InnoDB: Waiting for the background threads to start
+130416 16:41:49 Percona XtraDB (http://www.percona.com) 5.5.30-29.3 started; log sequence number 0
+/usr/bin/mysqld: File '/var/log/mysql/log-slow-queries.log' not found (Errcode: 13)
+130416 16:41:49 [ERROR] Could not use /var/log/mysql/log-slow-queries.log for logging (error 13). Turning logging off for the whole duration of the MySQL server process. To turn it on again: fix the cause, shutdown the MySQL server and restart it.
+130416 16:41:49 [ERROR] Fatal error: Can't open and lock privilege tables: Table 'mysql.host' doesn't exist
+130416 16:41:49 mysqld_safe mysqld from pid file /home/dplummer/src/hijacker/tmp/mysql.11.pid ended
+130416 16:45:33 mysqld_safe Starting mysqld daemon with databases from /home/dplummer/src/hijacker/tmp/mysql11
+130416 16:45:33 [Warning] The syntax '--log-slow-queries' is deprecated and will be removed in a future release. Please use '--slow-query-log'/'--slow-query-log-file' instead.
+130416 16:45:33 InnoDB: The InnoDB memory heap is disabled
+130416 16:45:33 InnoDB: Mutexes and rw_locks use GCC atomic builtins
+130416 16:45:33 InnoDB: Compressed tables use zlib 1.2.7
+130416 16:45:33 InnoDB: Using Linux native AIO
+130416 16:45:33 InnoDB: Initializing buffer pool, size = 2.0G
+130416 16:45:33 InnoDB: Completed initialization of buffer pool
+InnoDB: Unable to lock /home/dplummer/src/hijacker/tmp/mysql11/ib_logfile0, error: 11
+InnoDB: Check that you do not already have another mysqld process
+InnoDB: using the same InnoDB data or log files.
+InnoDB: Error in opening /home/dplummer/src/hijacker/tmp/mysql11/ib_logfile0
+130416 16:45:33 [ERROR] Plugin 'InnoDB' init function returned error.
+130416 16:45:33 [ERROR] Plugin 'InnoDB' registration as a STORAGE ENGINE failed.
+/usr/bin/mysqld: File '/var/log/mysql/log-slow-queries.log' not found (Errcode: 13)
+130416 16:45:33 [ERROR] Could not use /var/log/mysql/log-slow-queries.log for logging (error 13). Turning logging off for the whole duration of the MySQL server process. To turn it on again: fix the cause, shutdown the MySQL server and restart it.
+130416 16:45:33 [ERROR] Unknown/unsupported storage engine: InnoDB
+130416 16:45:33 [ERROR] Aborting
+
+130416 16:45:33 [Note] /usr/bin/mysqld: Shutdown complete
+
+130416 16:45:33 mysqld_safe mysqld from pid file /home/dplummer/src/hijacker/tmp/mysql.11.pid ended
+130416 16:46:25 mysqld_safe Starting mysqld daemon with databases from /home/dplummer/src/hijacker/tmp/mysql11
+130416 16:46:25 [Warning] The syntax '--log-slow-queries' is deprecated and will be removed in a future release. Please use '--slow-query-log'/'--slow-query-log-file' instead.
+130416 16:46:25 [Warning] The syntax '--log-slow-queries' is deprecated and will be removed in a future release. Please use '--slow-query-log'/'--slow-query-log-file' instead.
+130416 16:46:25 InnoDB: The InnoDB memory heap is disabled
+130416 16:46:25 InnoDB: Mutexes and rw_locks use GCC atomic builtins
+130416 16:46:25 InnoDB: Compressed tables use zlib 1.2.7
+130416 16:46:25 InnoDB: Using Linux native AIO
+130416 16:46:25 InnoDB: Initializing buffer pool, size = 64.0M
+130416 16:46:25 InnoDB: Completed initialization of buffer pool
+130416 16:46:25 InnoDB: Error: tablespace size must be at least 10 MB
+130416 16:46:25 [ERROR] Plugin 'InnoDB' init function returned error.
+130416 16:46:25 [ERROR] Plugin 'InnoDB' registration as a STORAGE ENGINE failed.
+130416 16:46:25 [ERROR] Unknown/unsupported storage engine: InnoDB
+130416 16:46:25 [ERROR] Aborting
+
+130416 16:46:25 [Note] /usr/bin/mysqld: Shutdown complete
+
+130416 16:46:25 mysqld_safe mysqld from pid file /home/dplummer/src/hijacker/tmp/mysql.11.pid ended
+130416 16:48:38 mysqld_safe Starting mysqld daemon with databases from /home/dplummer/src/hijacker/tmp/mysql11
+130416 16:48:38 [Warning] The syntax '--log-slow-queries' is deprecated and will be removed in a future release. Please use '--slow-query-log'/'--slow-query-log-file' instead.
+130416 16:48:38 [Warning] The syntax '--log-slow-queries' is deprecated and will be removed in a future release. Please use '--slow-query-log'/'--slow-query-log-file' instead.
+130416 16:48:38 InnoDB: The InnoDB memory heap is disabled
+130416 16:48:38 InnoDB: Mutexes and rw_locks use GCC atomic builtins
+130416 16:48:38 InnoDB: Compressed tables use zlib 1.2.7
+130416 16:48:38 InnoDB: Using Linux native AIO
+130416 16:48:38 InnoDB: Initializing buffer pool, size = 64.0M
+130416 16:48:38 InnoDB: Completed initialization of buffer pool
+130416 16:48:38 InnoDB: Error: tablespace size must be at least 10 MB
+130416 16:48:38 [ERROR] Plugin 'InnoDB' init function returned error.
+130416 16:48:38 [ERROR] Plugin 'InnoDB' registration as a STORAGE ENGINE failed.
+130416 16:48:38 [ERROR] Unknown/unsupported storage engine: InnoDB
+130416 16:48:38 [ERROR] Aborting
+
+130416 16:48:38 [Note] /usr/bin/mysqld: Shutdown complete
+
+130416 16:48:38 mysqld_safe mysqld from pid file /home/dplummer/src/hijacker/tmp/mysql.11.pid ended
+130416 16:50:25 mysqld_safe Starting mysqld daemon with databases from /home/dplummer/src/hijacker/tmp/mysql11
+130416 16:50:25 [Warning] The syntax '--log-slow-queries' is deprecated and will be removed in a future release. Please use '--slow-query-log'/'--slow-query-log-file' instead.
+130416 16:50:25 [Warning] The syntax '--log-slow-queries' is deprecated and will be removed in a future release. Please use '--slow-query-log'/'--slow-query-log-file' instead.
+130416 16:50:25 InnoDB: The InnoDB memory heap is disabled
+130416 16:50:25 InnoDB: Mutexes and rw_locks use GCC atomic builtins
+130416 16:50:25 InnoDB: Compressed tables use zlib 1.2.7
+130416 16:50:25 InnoDB: Using Linux native AIO
+130416 16:50:25 InnoDB: Initializing buffer pool, size = 64.0M
+130416 16:50:25 InnoDB: Completed initialization of buffer pool
+130416 16:50:25 InnoDB: Error: tablespace size must be at least 10 MB
+130416 16:50:25 [ERROR] Plugin 'InnoDB' init function returned error.
+130416 16:50:25 [ERROR] Plugin 'InnoDB' registration as a STORAGE ENGINE failed.
+130416 16:50:25 [ERROR] Unknown/unsupported storage engine: InnoDB
+130416 16:50:25 [ERROR] Aborting
+
+130416 16:50:25 [Note] /usr/bin/mysqld: Shutdown complete
+
+130416 16:50:25 mysqld_safe mysqld from pid file /home/dplummer/src/hijacker/tmp/mysql.11.pid ended
+130416 16:50:57 mysqld_safe Starting mysqld daemon with databases from /home/dplummer/src/hijacker/tmp/mysql11
+130416 16:50:57 [Warning] The syntax '--log-slow-queries' is deprecated and will be removed in a future release. Please use '--slow-query-log'/'--slow-query-log-file' instead.
+130416 16:50:57 [Warning] option 'slow_query_log': boolean value '/home/dplummer/src/hijacker/tmp/log-slow-queries.log' wasn't recognized. Set to OFF.
+130416 16:50:57 InnoDB: The InnoDB memory heap is disabled
+130416 16:50:57 InnoDB: Mutexes and rw_locks use GCC atomic builtins
+130416 16:50:57 InnoDB: Compressed tables use zlib 1.2.7
+130416 16:50:57 InnoDB: Using Linux native AIO
+130416 16:50:57 InnoDB: Initializing buffer pool, size = 64.0M
+130416 16:50:57 InnoDB: Completed initialization of buffer pool
+130416 16:50:57 InnoDB: Error: tablespace size must be at least 10 MB
+130416 16:50:57 [ERROR] Plugin 'InnoDB' init function returned error.
+130416 16:50:57 [ERROR] Plugin 'InnoDB' registration as a STORAGE ENGINE failed.
+130416 16:50:57 [ERROR] Unknown/unsupported storage engine: InnoDB
+130416 16:50:57 [ERROR] Aborting
+
+130416 16:50:57 [Note] /usr/bin/mysqld: Shutdown complete
+
+130416 16:50:57 mysqld_safe mysqld from pid file /home/dplummer/src/hijacker/tmp/mysql.11.pid ended
+130416 16:57:25 mysqld_safe Starting mysqld daemon with databases from /home/dplummer/src/hijacker/tmp/mysql11
+130416 16:57:25 [Warning] The syntax '--log-slow-queries' is deprecated and will be removed in a future release. Please use '--slow-query-log'/'--slow-query-log-file' instead.
+130416 16:57:25 [Warning] option 'slow_query_log': boolean value '/home/dplummer/src/hijacker/tmp/log-slow-queries.log' wasn't recognized. Set to OFF.
+130416 16:57:25 InnoDB: The InnoDB memory heap is disabled
+130416 16:57:25 InnoDB: Mutexes and rw_locks use GCC atomic builtins
+130416 16:57:25 InnoDB: Compressed tables use zlib 1.2.7
+130416 16:57:25 InnoDB: Using Linux native AIO
+130416 16:57:25 InnoDB: Initializing buffer pool, size = 64.0M
+130416 16:57:25 InnoDB: Completed initialization of buffer pool
+130416 16:57:25 InnoDB: Error: tablespace size must be at least 10 MB
+130416 16:57:25 [ERROR] Plugin 'InnoDB' init function returned error.
+130416 16:57:25 [ERROR] Plugin 'InnoDB' registration as a STORAGE ENGINE failed.
+130416 16:57:25 [ERROR] Unknown/unsupported storage engine: InnoDB
+130416 16:57:25 [ERROR] Aborting
+
+130416 16:57:25 [Note] /usr/bin/mysqld: Shutdown complete
+
+130416 16:57:25 mysqld_safe mysqld from pid file /home/dplummer/src/hijacker/tmp/mysql.11.pid ended
+130416 16:58:41 mysqld_safe Starting mysqld daemon with databases from /home/dplummer/src/hijacker/tmp/mysql11
+130416 16:58:41 [Warning] The syntax '--log-slow-queries' is deprecated and will be removed in a future release. Please use '--slow-query-log'/'--slow-query-log-file' instead.
+130416 16:58:41 InnoDB: The InnoDB memory heap is disabled
+130416 16:58:41 InnoDB: Mutexes and rw_locks use GCC atomic builtins
+130416 16:58:41 InnoDB: Compressed tables use zlib 1.2.7
+130416 16:58:41 InnoDB: Using Linux native AIO
+130416 16:58:41 InnoDB: Initializing buffer pool, size = 64.0M
+130416 16:58:41 InnoDB: Completed initialization of buffer pool
+InnoDB: Error: log file /home/dplummer/src/hijacker/tmp/mysql11/ib_logfile0 is of different size 0 134217728 bytes
+InnoDB: than specified in the .cnf file 0 8388608 bytes!
+130416 16:58:41 [ERROR] Plugin 'InnoDB' init function returned error.
+130416 16:58:41 [ERROR] Plugin 'InnoDB' registration as a STORAGE ENGINE failed.
+130416 16:58:41 [ERROR] Unknown/unsupported storage engine: InnoDB
+130416 16:58:41 [ERROR] Aborting
+
+130416 16:58:41 [Note] /usr/bin/mysqld: Shutdown complete
+
+130416 16:58:41 mysqld_safe mysqld from pid file /home/dplummer/src/hijacker/tmp/mysql.11.pid ended
+130416 16:59:44 mysqld_safe Starting mysqld daemon with databases from /home/dplummer/src/hijacker/tmp/mysql11
+130416 16:59:44 [Warning] The syntax '--log-slow-queries' is deprecated and will be removed in a future release. Please use '--slow-query-log'/'--slow-query-log-file' instead.
+130416 16:59:44 InnoDB: The InnoDB memory heap is disabled
+130416 16:59:44 InnoDB: Mutexes and rw_locks use GCC atomic builtins
+130416 16:59:44 InnoDB: Compressed tables use zlib 1.2.7
+130416 16:59:44 InnoDB: Using Linux native AIO
+130416 16:59:44 InnoDB: Initializing buffer pool, size = 64.0M
+130416 16:59:44 InnoDB: Completed initialization of buffer pool
+InnoDB: The first specified data file /home/dplummer/src/hijacker/tmp/mysql11/ibdata1 did not exist:
+InnoDB: a new database to be created!
+130416 16:59:44  InnoDB: Setting file /home/dplummer/src/hijacker/tmp/mysql11/ibdata1 size to 16 MB
+InnoDB: Database physically writes the file full: wait...
+130416 16:59:44  InnoDB: Log file /home/dplummer/src/hijacker/tmp/mysql11/ib_logfile0 did not exist: new to be created
+InnoDB: Setting log file /home/dplummer/src/hijacker/tmp/mysql11/ib_logfile0 size to 8 MB
+InnoDB: Database physically writes the file full: wait...
+130416 16:59:44  InnoDB: Log file /home/dplummer/src/hijacker/tmp/mysql11/ib_logfile1 did not exist: new to be created
+InnoDB: Setting log file /home/dplummer/src/hijacker/tmp/mysql11/ib_logfile1 size to 8 MB
+InnoDB: Database physically writes the file full: wait...
+InnoDB: Doublewrite buffer not found: creating new
+InnoDB: Doublewrite buffer created
+InnoDB: 127 rollback segment(s) active.
+InnoDB: Creating foreign key constraint system tables
+InnoDB: Foreign key constraint system tables created
+130416 16:59:44  InnoDB: Waiting for the background threads to start
+130416 16:59:45 Percona XtraDB (http://www.percona.com) 5.5.30-29.3 started; log sequence number 0
+130416 16:59:45 [Note] Event Scheduler: Loaded 0 events
+130416 16:59:45 [Note] /usr/bin/mysqld: ready for connections.
+Version: '5.5.30-log'  socket: '/home/dplummer/src/hijacker/tmp/mysqld_multi.11.sock'  port: 0  Source distribution
+130416 17:00:35 [Note] /usr/bin/mysqld: Normal shutdown
+
+130416 17:00:35 [Note] Event Scheduler: Purging the queue. 0 events
+130416 17:00:35  InnoDB: Starting shutdown...
+130416 17:00:38 mysqld_safe A mysqld process already exists
+130416 17:00:40  InnoDB: Shutdown completed; log sequence number 1597938
+130416 17:00:40 [Note] /usr/bin/mysqld: Shutdown complete
+
+130416 17:00:40 mysqld_safe mysqld from pid file /home/dplummer/src/hijacker/tmp/mysql.11.pid ended
+130416 17:01:17 mysqld_safe Starting mysqld daemon with databases from /home/dplummer/src/hijacker/tmp/mysql11
+130416 17:01:17 [Warning] The syntax '--log-slow-queries' is deprecated and will be removed in a future release. Please use '--slow-query-log'/'--slow-query-log-file' instead.
+130416 17:01:17 InnoDB: The InnoDB memory heap is disabled
+130416 17:01:17 InnoDB: Mutexes and rw_locks use GCC atomic builtins
+130416 17:01:17 InnoDB: Compressed tables use zlib 1.2.7
+130416 17:01:17 InnoDB: Using Linux native AIO
+130416 17:01:17 InnoDB: Initializing buffer pool, size = 64.0M
+130416 17:01:17 InnoDB: Completed initialization of buffer pool
+130416 17:01:17 InnoDB: highest supported file format is Barracuda.
+130416 17:01:17  InnoDB: Waiting for the background threads to start
+130416 17:01:18 Percona XtraDB (http://www.percona.com) 5.5.30-29.3 started; log sequence number 1597938
+130416 17:01:18 [Note] Event Scheduler: Loaded 0 events
+130416 17:01:18 [Note] /usr/bin/mysqld: ready for connections.
+Version: '5.5.30-log'  socket: '/home/dplummer/src/hijacker/tmp/mysqld_multi.11.sock'  port: 0  Source distribution
+130416 17:06:36 [Note] /usr/bin/mysqld: Normal shutdown
+
+130416 17:06:36 [Note] Event Scheduler: Purging the queue. 0 events
+130416 17:06:36  InnoDB: Starting shutdown...
+130416 17:06:37  InnoDB: Shutdown completed; log sequence number 1597938
+130416 17:06:37 [Note] /usr/bin/mysqld: Shutdown complete
+
+130416 17:06:37 mysqld_safe mysqld from pid file /home/dplummer/src/hijacker/tmp/mysql.11.pid ended
+130416 17:11:57 mysqld_safe Starting mysqld daemon with databases from /home/dplummer/src/hijacker/example/tmp/mysql11
+130416 17:11:57 [Warning] The syntax '--log-slow-queries' is deprecated and will be removed in a future release. Please use '--slow-query-log'/'--slow-query-log-file' instead.
+130416 17:11:57 InnoDB: The InnoDB memory heap is disabled
+130416 17:11:57 InnoDB: Mutexes and rw_locks use GCC atomic builtins
+130416 17:11:57 InnoDB: Compressed tables use zlib 1.2.7
+130416 17:11:57 InnoDB: Using Linux native AIO
+130416 17:11:57 InnoDB: Initializing buffer pool, size = 64.0M
+130416 17:11:57 InnoDB: Completed initialization of buffer pool
+130416 17:11:57 InnoDB: highest supported file format is Barracuda.
+130416 17:11:57  InnoDB: Waiting for the background threads to start
+130416 17:11:58 Percona XtraDB (http://www.percona.com) 5.5.30-29.3 started; log sequence number 1597938
+130416 17:11:58 [Note] Event Scheduler: Loaded 0 events
+130416 17:11:58 [Note] /usr/bin/mysqld: ready for connections.
+Version: '5.5.30-log'  socket: '/home/dplummer/src/hijacker/example/tmp/mysqld_multi.11.sock'  port: 0  Source distribution
+130416 17:13:36 [Note] /usr/bin/mysqld: Normal shutdown
+
+130416 17:13:36 [Note] Event Scheduler: Purging the queue. 0 events
+130416 17:13:36  InnoDB: Starting shutdown...
+130416 17:13:37  InnoDB: Shutdown completed; log sequence number 1597938
+130416 17:13:37 [Note] /usr/bin/mysqld: Shutdown complete
+
+130416 17:13:37 mysqld_safe mysqld from pid file /home/dplummer/src/hijacker/example/tmp/mysql.11.pid ended
+130416 17:13:44 mysqld_safe Starting mysqld daemon with databases from /home/dplummer/src/hijacker/example/tmp/mysql11
+130416 17:13:44 [Warning] The syntax '--log-slow-queries' is deprecated and will be removed in a future release. Please use '--slow-query-log'/'--slow-query-log-file' instead.
+130416 17:13:44 InnoDB: The InnoDB memory heap is disabled
+130416 17:13:44 InnoDB: Mutexes and rw_locks use GCC atomic builtins
+130416 17:13:44 InnoDB: Compressed tables use zlib 1.2.7
+130416 17:13:44 InnoDB: Using Linux native AIO
+130416 17:13:44 InnoDB: Initializing buffer pool, size = 2.0G
+130416 17:13:44 InnoDB: Completed initialization of buffer pool
+130416 17:13:44  InnoDB: Operating system error number 13 in a file operation.
+InnoDB: The error means mysqld does not have the access rights to
+InnoDB: the directory.
+InnoDB: File name /var/lib/mysql/ibdata1
+InnoDB: File operation call: 'open'.
+InnoDB: Cannot continue operation.
+130416 17:13:44 mysqld_safe mysqld from pid file /home/dplummer/src/hijacker/example/tmp/mysql.11.pid ended
+130416 17:14:46 mysqld_safe Starting mysqld daemon with databases from /home/dplummer/src/hijacker/example/tmp/mysql11
+130416 17:14:46 [Warning] The syntax '--log-slow-queries' is deprecated and will be removed in a future release. Please use '--slow-query-log'/'--slow-query-log-file' instead.
+130416 17:14:46 [Warning] ignore-builtin-innodb is deprecated and will be removed in future releases.
+130416 17:14:46 [ERROR] /usr/bin/mysqld: unknown variable 'innodb_data_home_dir=/var/lib/mysql'
+130416 17:14:46 [ERROR] Aborting
+
+130416 17:14:46 [Note] /usr/bin/mysqld: Shutdown complete
+
+130416 17:14:46 mysqld_safe mysqld from pid file /home/dplummer/src/hijacker/example/tmp/mysql.11.pid ended
+130416 17:15:34 mysqld_safe Starting mysqld daemon with databases from /home/dplummer/src/hijacker/example/tmp/mysql11
+130416 17:15:34 [Warning] The syntax '--log-slow-queries' is deprecated and will be removed in a future release. Please use '--slow-query-log'/'--slow-query-log-file' instead.
+130416 17:15:34 [Note] Plugin 'InnoDB' is disabled.
+130416 17:15:34 [Note] Event Scheduler: Loaded 0 events
+130416 17:15:34 [Note] /usr/bin/mysqld: ready for connections.
+Version: '5.5.30-log'  socket: '/home/dplummer/src/hijacker/example/tmp/mysqld_multi.11.sock'  port: 0  Source distribution
+130416 17:17:26 [Note] /usr/bin/mysqld: Normal shutdown
+
+130416 17:17:26 [Note] Event Scheduler: Purging the queue. 0 events
+130416 17:17:26 [Note] /usr/bin/mysqld: Shutdown complete
+
+130416 17:17:26 mysqld_safe mysqld from pid file /home/dplummer/src/hijacker/example/tmp/mysql.11.pid ended
+130416 17:17:32 mysqld_safe Starting mysqld daemon with databases from /home/dplummer/src/hijacker/example/tmp/mysql11
+130416 17:17:32 [Warning] The syntax '--log-slow-queries' is deprecated and will be removed in a future release. Please use '--slow-query-log'/'--slow-query-log-file' instead.
+130416 17:17:32 [Note] Plugin 'InnoDB' is disabled.
+130416 17:17:32 [ERROR] Can't start server : Bind on unix socket: Address already in use
+130416 17:17:32 [ERROR] Do you already have another mysqld server running on socket: /var/run/mysqld/mysqld.sock ?
+130416 17:17:32 [ERROR] Aborting
+
+130416 17:17:32 [Note] /usr/bin/mysqld: Shutdown complete
+
+130416 17:17:32 mysqld_safe mysqld from pid file /home/dplummer/src/hijacker/example/tmp/mysql.11.pid ended
+130416 17:24:55 mysqld_safe Starting mysqld daemon with databases from /home/dplummer/src/hijacker/example/tmp/mysql11
+130416 17:24:55 [Warning] The syntax '--log-slow-queries' is deprecated and will be removed in a future release. Please use '--slow-query-log'/'--slow-query-log-file' instead.
+130416 17:24:55 [Note] Plugin 'InnoDB' is disabled.
+130416 17:24:55 [Note] Event Scheduler: Loaded 0 events
+130416 17:24:55 [Note] /usr/bin/mysqld: ready for connections.
+Version: '5.5.30-log'  socket: '/home/dplummer/src/hijacker/example/tmp/mysqld_multi.11.sock'  port: 0  Source distribution
+130417  9:49:43 [Note] /usr/bin/mysqld: Normal shutdown
+
+130417  9:49:43 [Note] Event Scheduler: Purging the queue. 0 events
+130417  9:49:43 [Note] /usr/bin/mysqld: Shutdown complete
+
+130417 09:49:43 mysqld_safe mysqld from pid file /home/dplummer/src/hijacker/example/tmp/mysql.11.pid ended

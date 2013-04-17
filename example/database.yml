@@ -1,0 +1,11 @@
+---
+root:
+  adapter: mysql2
+  database: dbhijacker_root
+  port: 3311
+  user: root
+test:
+  adapter: mysql2
+  database: store1
+  port: 3311
+  user: root
