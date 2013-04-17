@@ -56,10 +56,10 @@ class Hijacker::Database < ActiveRecord::Base
   def self.find_master_for(client)
     @masters ||= {}
     @masters[client] ||= self.connection.select_values(
-        "SELECT master.database 
-        FROM `databases` AS master, `databases` AS sister
-        WHERE sister.database = #{ActiveRecord::Base.connection.quote(client)}
-        AND sister.master_id = master.id"
+        "SELECT master.database "\
+        "FROM `databases` AS master, `databases` AS sister "\
+        "WHERE sister.database = #{ActiveRecord::Base.connection.quote(client)} "\
+        "AND sister.master_id = master.id"
       ).first
   end
 
@@ -68,7 +68,7 @@ class Hijacker::Database < ActiveRecord::Base
     master = self.find_master_for(client)
     sister = master.nil? ? nil : client
     master ||= client
-    
+
     return master, sister
   end
 
