@@ -35,6 +35,8 @@ class HijackerMultiHostTest
     create_products
 
     verify_products
+
+    verify_count_each
   end
 
 private
@@ -62,6 +64,13 @@ private
       unless all_products == [product_name]
         raise "Expected #{database} to have only #{product_name} but got #{all_products.join(", ")}"
       end
+    end
+  end
+
+  def verify_count_each
+    values = Hijacker::Database.count_each { Product.count }.values
+    unless values.all? {|v| v == 1}
+      raise "oh no not all databases have 1 product"
     end
   end
 
