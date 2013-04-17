@@ -3,7 +3,7 @@
 Gem::Specification.new do |s|
   s.name = %q{dbhijacker}
   s.homepage = "https://github.com/crystalcommerce/hijacker"
-  s.version = "0.7.3"
+  s.version = "0.8.0"
 
   s.authors = ["Michael Xavier", "Donald Plummer", "Woody Peterson"]
   s.date = %q{2012-03-21}
