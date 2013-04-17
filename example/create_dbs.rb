@@ -35,6 +35,7 @@ class RootDatabase < CreateDatabase
   def create(names_ports)
     super()
     insert_client_databases(names_ports)
+    create_databaseless_host
   end
 
   def insert_client_databases(names_ports)
@@ -48,10 +49,13 @@ class RootDatabase < CreateDatabase
     }
     require 'dbhijacker'
     names_ports.each do |(name, port)|
-      host = Hijacker::Host.find_or_initialize_by_hostname_and_port("localhost", port)
-      host.save!
+      host = find_or_create_host("localhost", port)
       Hijacker::Database.create!(database: name, host: host)
     end
+  end
+
+  def create_databaseless_host
+    find_or_create_host("localhost", databaseless_port)
   end
 
   def load_schema
@@ -75,6 +79,18 @@ class RootDatabase < CreateDatabase
       t.string "hostname"
       t.integer "port"
     end
+  end
+
+private
+
+  def find_or_create_host(host, port)
+    host = Hijacker::Host.find_or_initialize_by_hostname_and_port(host, port)
+    host.save!
+    host
+  end
+
+  def databaseless_port
+    3314
   end
 end
 
@@ -108,6 +124,7 @@ class CreateDatabases
     names_paired_with_ports.each do |(name, port)|
       create_client_database(port, name)
     end
+
   end
 
   def create_root_database(names_paired_with_ports)
