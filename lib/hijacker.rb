@@ -230,8 +230,11 @@ private
   end
 
   def self.connection_config(database)
+    hostname = database.host.hostname
+    port = database.host.port || root_config['port']
     root_config.merge('database' => database.name,
-                      'host' => database.host.hostname)
+                      'host' => hostname,
+                      'port' => port)
   end
 end
 
