@@ -120,16 +120,32 @@ class Hijacker::Database < ActiveRecord::Base
     end
   end
 
-  def self.count_each(&blk)
+  def self.count_each(options = {}, &blk)
     acc = {}
-    connect_each do |db|
-      count = blk.call
-      acc[db] = count if count > 0
+
+    if options.fetch(:progress, true)
+      require 'progress'
+      Progress.start("Counting...", count) do
+        connect_each do |db|
+          count = blk.call
+          acc[db] = count if count > 0
+          Progress.step
+        end
+      end
+    else
+      connect_each do |db|
+        count = blk.call
+        acc[db] = count if count > 0
+      end
     end
-    width = acc.keys.map(&:length).max
-    acc.sort_by(&:last).each do |db, count|
-      puts("%#{width}s: %s" % [db, count])
+
+    if options.fetch(:print, true)
+      width = acc.keys.map(&:length).max
+      acc.sort_by(&:last).each do |db, count|
+        puts("%#{width}s: %s" % [db, count])
+      end
     end
+
     acc
   end
 
