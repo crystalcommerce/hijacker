@@ -3,7 +3,7 @@
 Gem::Specification.new do |s|
   s.name = %q{dbhijacker}
   s.homepage = "https://github.com/crystalcommerce/hijacker"
-  s.version = "0.8.2"
+  s.version = "0.8.3"
 
   s.license = "MIT"
 
@@ -14,12 +14,12 @@ Gem::Specification.new do |s|
 
   s.add_dependency("rails", ">= 2.3.14")
 
-  s.add_development_dependency "bundler",   "~> 1.3"
-  s.add_development_dependency "rake",      "~> 0.9.2"
-  s.add_development_dependency "rack-test", "~> 0.6.1"
-  s.add_development_dependency "rack",      "~> 1.1.0"
-  s.add_development_dependency "rspec",     "~> 2.8"
-  s.add_development_dependency "sqlite3",   "~> 1.3.5"
+  s.add_development_dependency "bundler",   ">= 1.3"
+  s.add_development_dependency "rake",      ">= 0.9.2"
+  s.add_development_dependency "rack-test", ">= 0.6.1"
+  s.add_development_dependency "rack",      ">= 1.1.0"
+  s.add_development_dependency "rspec",     ">= 2.8"
+  s.add_development_dependency "sqlite3",   ">= 1.3.5"
 
   s.extra_rdoc_files = [
     "README.rdoc"
