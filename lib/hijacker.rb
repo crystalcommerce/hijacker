@@ -172,6 +172,11 @@ module Hijacker
     sister || master
   end
 
+  def self.do_hijacking?
+    (Hijacker.config[:hosted_environments] || %w[staging production]).
+      include?(ENV['RAILS_ENV'] || Rails.env)
+  end
+
   # just calling establish_connection doesn't actually check to see if
   # we've established a VALID connection. a call to connection will check
   # this, and throw an error if the connection's invalid. It is important 

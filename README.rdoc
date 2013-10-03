@@ -1,7 +1,14 @@
 Hijacker
 ========
 
-One application, multiple client databases. Although customizable, by default uses a combination of database and regular expression matching against the host domain to figure out which database to connect to.
+I don't recommend you use this gem. It is not production quality.
+
+Notes for adding thread safety:
+https://github.com/discourse/discourse/blob/691377b5af72ea0f3223223cfb623b991c96cbb8/vendor/gems/rails_multisite/lib/rails_multisite/connection_management.rb
+
+One application, multiple client databases. Although customizable, by default
+uses a combination of database and regular expression matching against the host
+domain to figure out which database to connect to.
 
 Example
 =======
