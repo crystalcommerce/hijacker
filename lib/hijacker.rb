@@ -24,7 +24,7 @@ module Hijacker
   # 
   # Background: every time rails gets information
   # from the database, it uses the last established connection. So,
-  # although we've already established a connection to a "dummy" db
+  # although we've already established a connection to a root db
   # ("crystal", in this case), if we establish a new connection, all
   # subsequent database calls will use these settings instead (well,
   # until it's called again when it gets another request).
@@ -44,9 +44,7 @@ module Hijacker
         return "Already connected to #{target_name}"
       end
 
-      verify = options.fetch(:verify, Hijacker.do_hijacking?)
-
-      database = determine_database(target_name, sister_name, verify)
+      database = determine_database(target_name, sister_name)
 
       establish_connection_to_database(database)
 
@@ -63,7 +61,8 @@ module Hijacker
       # don't cache sister site
       cache_database_route(target_name, database) unless sister_name
 
-      connect_sister_site_models(target_name)
+      # Do this even on a site without a master so we reconnect these models
+      connect_sister_site_models(database.master || database)
 
       reenable_query_caching
 
@@ -80,29 +79,33 @@ module Hijacker
 
   # very small chance this will raise, but if it does, we will still handle it the
   # same as +Hijacker.connect+ so we don't lock up the app.
-  # 
+  #
   # Also note that sister site models share a connection via minor management of
   # AR's connection_pool stuff, and will use ActiveRecord::Base.connection_pool if
   # we're not in a sister-site situation
-  def self.connect_sister_site_models(db)
-    return if db.nil?
-    database = Hijacker::Database.find_by_database(db)
+  def self.connect_sister_site_models(master_database)
+    master_db_connection_pool = if processing_sister_site?
+                                  nil
+                                else
+                                  ActiveRecord::Base.connection_pool
+                                end
+    master_config = connection_config(master_database)
 
-    sister_db_connection_pool = self.processing_sister_site? ? nil : ActiveRecord::Base.connection_pool
-    self.config[:sister_site_models].each do |model_name|
-      ar_model = model_name.constantize
+    config[:sister_site_models].each do |model_name|
+      klass = model_name.constantize
 
-      if !sister_db_connection_pool
-        ar_model.establish_connection(connection_config(database))
+      klass.establish_connection(master_config)
+
+      if !master_db_connection_pool
         begin
-          ar_model.connection
+          klass.connection
         rescue
-          ar_model.establish_connection(root_config)
-          raise Hijacker::InvalidDatabase, db
+          klass.establish_connection(root_config)
+          raise Hijacker::InvalidDatabase, database.name
         end
-        sister_db_connection_pool = ar_model.connection_pool
+        master_db_connection_pool = klass.connection_pool
       else
-        ActiveRecord::Base.connection_handler.connection_pools[model_name] = sister_db_connection_pool
+        ActiveRecord::Base.connection_handler.connection_pools[model_name] = master_db_connection_pool
       end
     end
   end
@@ -110,20 +113,21 @@ module Hijacker
   # connects the sister_site_models to +db+ while calling the block
   # if +db+ and self.master differ
   def self.temporary_sister_connect(db, &block)
-    processing_sister_site = (db != self.master && db != self.sister)
+    processing_sister_site = (db != master && db != sister)
     self.sister = db if processing_sister_site
     self.connect_sister_site_models(db) if processing_sister_site
     result = block.call
     self.connect_sister_site_models(self.master) if processing_sister_site
     self.sister = nil if processing_sister_site
-    return result
+
+    result
   end
   
-  # maintains and returns a connection to the "dummy" database.
+  # maintains and returns a connection to the root database.
   # 
   # The advantage of using this over just calling
   # ActiveRecord::Base.establish_connection (without arguments) to reconnect
-  # to the dummy database is that reusing the same connection greatly reduces
+  # to the root database is that reusing the same connection greatly reduces
   # context switching overhead etc involved with establishing a connection to
   # the database. It may seem trivial, but it actually seems to speed things
   # up by ~ 1/3 for already fast requests (probably less noticeable on slower
@@ -139,7 +143,7 @@ module Hijacker
       ActiveRecord::Base.establish_connection(current_config) # reconnect, we don't intend to hijack
     end
 
-    return $hijacker_root_connection
+    $hijacker_root_connection
   end
 
   def self.root_config
@@ -161,16 +165,11 @@ module Hijacker
   end
 
   def self.master
-    @master || database_configurations.fetch(ENV['RAILS_ENV'] || RAILS_ENV)['database']
+    @master || database_configurations.fetch(ENV['RAILS_ENV'] || Rails.env)['database']
   end
 
   def self.current_client
     sister || master
-  end
-
-  def self.do_hijacking?
-    (Hijacker.config[:hosted_environments] || %w[staging production]).
-      include?(ENV['RAILS_ENV'])
   end
 
   # just calling establish_connection doesn't actually check to see if
@@ -192,7 +191,7 @@ private
     current_client == new_master && sister == new_sister
   end
 
-  def self.determine_database(target_name, sister_name, verify)
+  def self.determine_database(target_name, sister_name)
     if sister_name
       database = Hijacker::Database.find_by_name(sister_name)
       raise(Hijacker::InvalidDatabase, sister_name) if database.nil?
