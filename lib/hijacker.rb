@@ -41,6 +41,7 @@ module Hijacker
       sister_name = sister_name.downcase unless sister_name.nil?
 
       if already_connected?(target_name, sister_name)
+        run_after_hijack_callback
         return "Already connected to #{target_name}"
       end
 
@@ -66,7 +67,7 @@ module Hijacker
 
       reenable_query_caching
 
-      self.config[:after_hijack].call if self.config[:after_hijack]
+      run_after_hijack_callback
     rescue
       if original_database.present?
         establish_connection_to_database(original_database)
@@ -239,6 +240,10 @@ private
     root_config.merge('database' => database.name,
                       'host' => hostname,
                       'port' => port)
+  end
+
+  def self.run_after_hijack_callback
+    config[:after_hijack].call if config[:after_hijack]
   end
 end
 
