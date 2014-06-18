@@ -1,5 +1,5 @@
 require 'rake'
-require 'rake/rdoctask'
+require 'rdoc/task'
 
 
 desc 'Generate documentation for the hijacker plugin.'
