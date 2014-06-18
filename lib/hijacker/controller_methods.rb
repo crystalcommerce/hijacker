@@ -20,7 +20,7 @@ module Hijacker::ControllerMethods
     # Returns 2-member array of the main database to connect to, and the sister
     # (sister will be nil if no master is found, which means we are on the master).
     def determine_databases
-      Hijacker::RequestParser.new(request.env).determine_databases
+      Hijacker::RequestParser.from_request(request).determine_databases
     end
 
     def render_invalid_db

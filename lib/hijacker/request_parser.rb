@@ -2,10 +2,19 @@ require 'rack/request'
 
 module Hijacker
   class RequestParser
-    attr_reader :request
+    attr_reader :host
 
-    def initialize(env)
-      @request = Rack::Request.new(env)
+    def self.from_env(env)
+      request = Rack::Request.new(env)
+      from_request(request)
+    end
+
+    def self.from_request(request)
+      new(request.host)
+    end
+
+    def initialize(host)
+      @host = host
     end
 
     def determine_databases
@@ -34,10 +43,6 @@ module Hijacker
 
     def do_hijacking?
       Hijacker.do_hijacking?
-    end
-
-    def host
-      request.host
     end
   end
 end

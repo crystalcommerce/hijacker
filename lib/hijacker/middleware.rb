@@ -39,7 +39,7 @@ module Hijacker
       if client = env[HEADER_KEY]
         Hijacker::Database.find_master_and_sister_for(client)
       else
-        RequestParser.new(env).determine_databases
+        RequestParser.from_env(env).determine_databases
       end
     end
   end
