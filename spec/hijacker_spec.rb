@@ -6,7 +6,7 @@ describe Hijacker do
   before(:each) do
     Hijacker.config = {
       :hosted_environments => hosted_environments
-    } 
+    }
   end
 
   let!(:host) { Hijacker::Host.create!(:hostname => "localhost") }
@@ -32,7 +32,7 @@ describe Hijacker do
     end
   end
 
-  describe "class methods" do 
+  describe "class methods" do
     subject { Hijacker }
 
     describe ".connect" do
@@ -43,7 +43,7 @@ describe Hijacker do
         subject.sister = nil
         subject.valid_routes = {}
         ActiveRecord::Base.stub(:establish_connection)
-        subject.stub(:root_connection).and_return(stub(:config => {}))
+        subject.stub(:root_connection).and_return(double(:config => {}))
         subject.stub(:connect_sister_site_models)
         Hijacker.stub(:do_hijacking?).and_return(true)
         ::ActionController::Base.stub(:perform_caching).
@@ -149,7 +149,7 @@ describe Hijacker do
 
         it "enables the query cache on ActiveRecord::Base" do
           subject.connect('master_db')
-          ::ActiveRecord::Base.connection.query_cache_enabled.should be_true
+          ::ActiveRecord::Base.connection.query_cache_enabled.should eq(true)
         end
 
         it "calls cache on the connection" do
@@ -159,7 +159,7 @@ describe Hijacker do
       end
 
       context "after_hijack call specified" do
-        let(:spy) { stub.as_null_object }
+        let(:spy) { double.as_null_object }
         before(:each) do
           Hijacker.config.merge!(:after_hijack => spy)
         end

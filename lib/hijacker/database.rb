@@ -51,7 +51,7 @@ class Hijacker::Database < ActiveRecord::Base
   def self.current
     find(:first, :conditions => {:database => Hijacker.current_client})
   end
-  
+
   # returns a string or nil
   def self.find_master_for(client)
     @masters ||= {}
@@ -85,7 +85,7 @@ class Hijacker::Database < ActiveRecord::Base
     sites.delete(Hijacker.current_client)
     connect_each(sites, &block)
   end
-  
+
   def self.find_shared_sites_for(client)
     @shared_sites ||= {}
     return @shared_sites[client] if @shared_sites[client].present?
