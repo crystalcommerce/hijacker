@@ -38,12 +38,12 @@ module Hijacker
 
     describe "#connect_each" do
       def db(name)
-        mock("#{name}_db", :database => name)
+        double("#{name}_db", :database => name)
       end
 
       before (:each) do
-        Database.stub!(:all).and_return([ db("one"), db("two"), db("three") ])
-        Hijacker.stub!(:connect)
+        Database.stub(:all).and_return([ db("one"), db("two"), db("three") ])
+        Hijacker.stub(:connect)
       end
 
       it "Calls the block once for each database" do

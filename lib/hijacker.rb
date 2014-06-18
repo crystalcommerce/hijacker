@@ -1,4 +1,5 @@
 require 'hijacker/active_record_ext'
+require 'hijacker/request_parser'
 require 'active_record'
 require 'action_controller'
 require 'set'
@@ -21,14 +22,14 @@ module Hijacker
   end
 
   # Manually establishes a new connection to the database.
-  # 
+  #
   # Background: every time rails gets information
   # from the database, it uses the last established connection. So,
   # although we've already established a connection to a "dummy" db
   # ("crystal", in this case), if we establish a new connection, all
   # subsequent database calls will use these settings instead (well,
   # until it's called again when it gets another request).
-  # 
+  #
   # Note that you can manually call this from script/console (or wherever)
   # to connect to the database you want, ex Hijacker.connect("database")
   def self.connect(target_name, sister_name = nil, options = {})
@@ -80,7 +81,7 @@ module Hijacker
 
   # very small chance this will raise, but if it does, we will still handle it the
   # same as +Hijacker.connect+ so we don't lock up the app.
-  # 
+  #
   # Also note that sister site models share a connection via minor management of
   # AR's connection_pool stuff, and will use ActiveRecord::Base.connection_pool if
   # we're not in a sister-site situation
@@ -118,9 +119,9 @@ module Hijacker
     self.sister = nil if processing_sister_site
     return result
   end
-  
+
   # maintains and returns a connection to the "dummy" database.
-  # 
+  #
   # The advantage of using this over just calling
   # ActiveRecord::Base.establish_connection (without arguments) to reconnect
   # to the dummy database is that reusing the same connection greatly reduces
@@ -128,7 +129,7 @@ module Hijacker
   # the database. It may seem trivial, but it actually seems to speed things
   # up by ~ 1/3 for already fast requests (probably less noticeable on slower
   # pages).
-  # 
+  #
   # Note: does not hijack, just returns the root connection (i.e. AR::Base will
   # maintain its connection)
   def self.root_connection
@@ -175,7 +176,7 @@ module Hijacker
 
   # just calling establish_connection doesn't actually check to see if
   # we've established a VALID connection. a call to connection will check
-  # this, and throw an error if the connection's invalid. It is important 
+  # this, and throw an error if the connection's invalid. It is important
   # to catch the error and reconnect to a known valid database or rails
   # will get stuck. This is because once we establish a connection to an
   # invalid database, the next request will do a courteousy touch to the
