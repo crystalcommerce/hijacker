@@ -1,5 +1,5 @@
-require 'hijacker/active_record_ext'
-require 'hijacker/request_parser'
+require_relative './hijacker/active_record_ext'
+require_relative './hijacker/request_parser'
 require 'active_record'
 require 'action_controller'
 require 'set'
@@ -252,8 +252,8 @@ private
   end
 end
 
-require 'hijacker/database'
-require 'hijacker/alias'
-require 'hijacker/host'
-require 'hijacker/middleware'
-require 'hijacker/controller_methods'
+require_relative './hijacker/database'
+require_relative './hijacker/alias'
+require_relative './hijacker/host'
+require_relative './hijacker/middleware'
+require_relative './hijacker/controller_methods'
