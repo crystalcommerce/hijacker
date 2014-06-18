@@ -4,11 +4,11 @@ describe Hijacker::Host do
   it "validates the format of the hostname" do
     subject.hostname = "lol nope"
     subject.should_not be_valid
-    subject.errors.on(:hostname).should == "is invalid"
+    subject.errors[:hostname].should == ["is invalid"]
 
     subject.hostname = nil
     subject.should_not be_valid
-    subject.errors.on(:hostname).should == "is invalid"
+    subject.errors[:hostname].should == ["is invalid"]
 
     subject.hostname = "db-01.example.com"
     subject.should be_valid

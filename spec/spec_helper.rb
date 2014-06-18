@@ -19,7 +19,7 @@ ActiveRecord::Base.configurations = {
   }
 }
 
-ActiveRecord::Base.establish_connection
+ActiveRecord::Base.establish_connection(:test)
 require File.dirname(__FILE__) + "/../example_root_schema"
 
 require 'hijacker'
