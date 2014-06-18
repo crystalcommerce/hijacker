@@ -6,7 +6,13 @@ require 'set'
 
 module Hijacker
   class UnparseableURL < StandardError;end
-  class InvalidDatabase < StandardError;end
+  class InvalidDatabase < StandardError
+    attr_reader :database
+    def initialize(database, message = "Database #{database} not found")
+      @database = database
+      super(message)
+    end
+  end
 
   class << self
     attr_accessor :config, :master, :sister
@@ -36,7 +42,7 @@ module Hijacker
     original_database = Hijacker::Database.current
 
     begin
-      raise InvalidDatabase, 'master cannot be nil' if target_name.nil?
+      raise InvalidDatabase.new(nil, 'master cannot be nil') if target_name.nil?
 
       target_name = target_name.downcase
       sister_name = sister_name.downcase unless sister_name.nil?
@@ -103,7 +109,7 @@ module Hijacker
           klass.connection
         rescue
           klass.establish_connection(root_config)
-          raise Hijacker::InvalidDatabase, database.name
+          raise Hijacker::InvalidDatabase.new(database.name)
         end
         master_db_connection_pool = klass.connection_pool
       else
@@ -199,14 +205,14 @@ private
   def self.determine_database(target_name, sister_name)
     if sister_name
       database = Hijacker::Database.find_by_name(sister_name)
-      raise(Hijacker::InvalidDatabase, sister_name) if database.nil?
+      raise(Hijacker::InvalidDatabase.new(sister_name)) if database.nil?
       database
     elsif valid_routes[target_name]
       valid_routes[target_name] # cached valid database
     else
       database = Hijacker::Alias.find_by_name(target_name).try(:database) ||
                  Hijacker::Database.find_by_name(target_name)
-      raise(Hijacker::InvalidDatabase, target_name) if database.nil?
+      raise(Hijacker::InvalidDatabase.new(target_name)) if database.nil?
       database
     end
   end
