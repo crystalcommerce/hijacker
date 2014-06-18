@@ -18,7 +18,7 @@ module Hijacker
     it "requires a host" do
       subject.host = nil
       subject.should_not be_valid
-      subject.errors.on(:host_id).should == "can't be blank"
+      subject.errors[:host_id].should == ["can't be blank"]
 
       subject.host = host
       subject.should be_valid
@@ -74,7 +74,7 @@ module Hijacker
         Hijacker.stub(:connect).and_raise(Hijacker::InvalidDatabase)
         expect { Database.connect_each {|db| } }.not_to raise_error
       end
-      
+
       it "eats mysql-specific errors for missing databases" do
         [Mysql::Error, Mysql2::Error].each do |klass|
           exception = klass.new("Unknown database 'fake'")
