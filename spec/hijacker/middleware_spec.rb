@@ -86,6 +86,35 @@ module Hijacker
         end
       end
 
+      context "unparseable URL" do
+        let(:request_env) do
+          {
+           "HTTP_HOST" => "(>'-'>)"
+          }
+        end
+
+        it "returns a 404" do
+          resp = make_request
+          expect(resp.status).to eq(404)
+          expect(resp.body).to eq("cannot parse '(>'-'>)'")
+        end
+
+        context "custom bad url handler" do
+          def app
+            Rack::Builder.new do
+              use Hijacker::Middleware, :bad_url => ->(message, env) { [404, {}, "You done goofed, #{message}"]}
+              run lambda { |env| [200, { 'blah' => 'blah' }, ["success"]] }
+            end
+          end
+
+          it "uses the custom not found handler" do
+            resp = make_request
+            expect(resp.status).to eq(404)
+            expect(resp.body).to eq("You done goofed, cannot parse '(>'-'>)'")
+          end
+        end
+      end
+
       context "database not found" do
         let(:request_env) {{ 'HTTP_X_HIJACKER_DB' => 'bogus' }}
 
