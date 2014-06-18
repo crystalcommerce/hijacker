@@ -1,3 +1,4 @@
+# DEPRECATED: use middleware instead
 module Hijacker::ControllerMethods
   module Instance
     def hijack_connection

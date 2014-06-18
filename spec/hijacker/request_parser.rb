@@ -23,7 +23,9 @@ module Hijacker
     def client_from_domain_pattern
       Hijacker.config.
         fetch(:domain_patterns).
-        detect {|pattern| host.scan(pattern).flatten.first}
+        map {|pattern| host.scan(pattern).flatten.first}.
+        compact.
+        first
     end
 
     def base_client

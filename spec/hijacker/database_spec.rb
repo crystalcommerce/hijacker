@@ -71,7 +71,7 @@ module Hijacker
       end
 
       it "eats invalid database errors" do
-        Hijacker.stub(:connect).and_raise(Hijacker::InvalidDatabase)
+        Hijacker.stub(:connect).and_raise(Hijacker::InvalidDatabase.new("doesntmatter"))
         expect { Database.connect_each {|db| } }.not_to raise_error
       end
 
