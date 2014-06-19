@@ -15,7 +15,7 @@ if !defined?(Mysql)
   end
 end
 
-class Hijacker::Database < ActiveRecord::Base
+class Hijacker::Database < Hijacker::BaseModel
   module MissingDatabaseError
     MYSQL_UNKNOWN_DB_ERRNO = 1049
 
@@ -25,8 +25,6 @@ class Hijacker::Database < ActiveRecord::Base
         e.errno == MYSQL_UNKNOWN_DB_ERRNO
     end
   end
-
-  establish_connection(Hijacker.root_config)
 
   has_many :aliases, :class_name => "Hijacker::Alias"
   belongs_to :master, :foreign_key => 'master_id', :class_name => 'Hijacker::Database'

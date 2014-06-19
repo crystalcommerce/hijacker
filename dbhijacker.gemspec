@@ -41,6 +41,7 @@ Gem::Specification.new do |s|
     lib/hijacker.rb
     lib/hijacker/active_record_ext.rb
     lib/hijacker/alias.rb
+    lib/hijacker/base_model.rb
     lib/hijacker/controller_methods.rb
     lib/hijacker/database.rb
     lib/hijacker/host.rb

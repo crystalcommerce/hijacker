@@ -252,6 +252,7 @@ private
   end
 end
 
+require_relative './hijacker/base_model'
 require_relative './hijacker/database'
 require_relative './hijacker/alias'
 require_relative './hijacker/host'
