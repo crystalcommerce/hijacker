@@ -16,5 +16,5 @@ Gem::PackageTask.new(spec) {}
 
 desc "Push latest gem version"
 task :release => :gem do
-  sh "gem push #{spec.name}-#{spec.version}.gem"
+  sh "gem push pkg/#{spec.name}-#{spec.version}.gem"
 end
