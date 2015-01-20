@@ -47,7 +47,7 @@ class Hijacker::Database < Hijacker::BaseModel
   end
 
   def self.current
-    find(:first, :conditions => {:database => Hijacker.current_client})
+    where(:database => Hijacker.current_client).first
   end
 
   # returns a string or nil
@@ -88,7 +88,7 @@ class Hijacker::Database < Hijacker::BaseModel
     @shared_sites ||= {}
     return @shared_sites[client] if @shared_sites[client].present?
 
-    current = self.find(:first, :conditions => {:database => client})
+    current = self.where(:database => client).first
     master_id = current.master_id || current.id
 
     @shared_sites[client] = self.connection.select_values(
