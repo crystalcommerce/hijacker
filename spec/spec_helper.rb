@@ -7,6 +7,8 @@ RAILS_ENV = "test"
 ENV['RAILS_ENV'] = 'test'
 
 $:.unshift '../lib'
+# ActiveRecord::Base.logger = Logger.new(STDOUT) if defined?(ActiveRecord::Base)
+
 
 ActiveRecord::Base.configurations = {
   "root" => {
@@ -20,6 +22,7 @@ ActiveRecord::Base.configurations = {
 }
 
 ActiveRecord::Base.establish_connection(:test)
+
 require File.dirname(__FILE__) + "/../example_root_schema"
 
 require 'hijacker'

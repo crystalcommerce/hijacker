@@ -3,3 +3,7 @@ test_database.sqlite3
 dbhijacker*.gem
 tmp
 localhost.err
+.idea/
+.rvmrc
+foo
+sample-db
