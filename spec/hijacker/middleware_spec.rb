@@ -43,10 +43,9 @@ module Hijacker
           expect(ActiveRecord::Base.connected?).to be true
           ActiveRecord::Base.remove_connection
           expect(ActiveRecord::Base.connected?).to be nil
-          make_request
+          resp = make_request
           expect(ActiveRecord::Base.connected?).to be true
           expect(Hijacker.current_client).to eq('sample-db')
-          resp = make_request
           expect(resp.status).to eq(200)
 
         end
