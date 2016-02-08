@@ -27,7 +27,6 @@ module Hijacker
        :sister_site_models => []
       }
 
-      ActiveRecord::Base.stub(:establish_connection)
     end
 
     describe "#call" do
@@ -35,6 +34,22 @@ module Hijacker
 
       def make_request
         get '/', {}, request_env
+      end
+
+      context "When Database connection fails" do
+        it "connection automatically recovers" do
+          make_request
+          expect(Hijacker.current_client).to eq('sample-db')
+          expect(ActiveRecord::Base.connected?).to be true
+          ActiveRecord::Base.remove_connection
+          expect(ActiveRecord::Base.connected?).to be nil
+          make_request
+          expect(ActiveRecord::Base.connected?).to be true
+          expect(Hijacker.current_client).to eq('sample-db')
+          resp = make_request
+          expect(resp.status).to eq(200)
+
+        end
       end
 
       context "When the 'X-Hijacker-DB' header is set" do
