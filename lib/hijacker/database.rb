@@ -16,6 +16,9 @@ if !defined?(Mysql)
 end
 
 class Hijacker::Database < Hijacker::BaseModel
+  
+  @@hijacker_yaml = nil
+  
   module MissingDatabaseError
     MYSQL_UNKNOWN_DB_ERRNO = 1049
 
@@ -30,43 +33,118 @@ class Hijacker::Database < Hijacker::BaseModel
   belongs_to :master, :foreign_key => 'master_id', :class_name => 'Hijacker::Database'
   has_many :sisters, :foreign_key => 'master_id', :class_name => 'Hijacker::Database'
   belongs_to :host, :class_name => "Hijacker::Host"
-
   validates_uniqueness_of :database
-
   validates_presence_of :host_id
-
   alias_attribute :name, :database
 
+  attr_accessor :yaml_host, :yaml_master, :yaml_sisters
+
+  def host
+    yaml_host.present? ? yaml_host : super
+  end
+  
+  def master
+    yaml_master.present? ? yaml_master : super
+  end
+  
+  def sisters
+    yaml_sisters.present? ? yaml_sisters : super
+  end
 
   def sister?
     master_id.present?
   end
 
   def self.find_by_name(name)
-    find_by_database(name)
+    if has_hijacker_yml?
+      hijacker_yaml[name].present? ? 
+        new_from_yaml(hijacker_yaml[name]) :
+        nil
+    else
+      find_by_database(name)      
+    end
+  end
+  
+  def self.new_from_yaml(data)
+    sisters_data  = data.delete(:sisters)
+    master_data   = data.delete(:master)
+    host_data     = data.delete(:host)
+    data          = data.delete(:database)
+    id            = data.delete(:id)
+
+    db = new(data)
+    db.id   = id
+
+    if host_data.present?
+      host_id = host_data.delete(:id)
+      db.yaml_host = Hijacker::Host.new(host_data)
+      db.host_id = db.host.id = host_id
+    end
+
+    if master_data.present?
+      master_id = master_data.delete(:id)
+      db.yaml_master = Hijacker::Database.new_from_yaml(master_data)
+      db.master_id = db.master.id = master_id
+    end
+    
+    if sisters_data.present?
+      db.yaml_sisters = sisters_data.map do |sister_data|
+        sister_id = sister_data.delete(:id)
+        sister = Hijacker::Database.new_from_yaml(sister_data)
+        sister.id = sister_id
+        sister
+      end
+    end
+
+    db
+  end
+  
+  def self.hijacker_path
+    Rails.root.join('config', 'hijacker.yml')
+  end
+  
+  def self.hijacker_yaml
+    Rails.logger.info("YAML 2: #{@@hijacker_yaml.present?}")
+    @@hijacker_yaml ||= YAML::load_file(hijacker_path)
+  end
+  
+  def self.has_hijacker_yml?
+    @@hijacker_yaml.present? || File.exist?(hijacker_path)
   end
 
   def self.current
-    find(:first, :conditions => {:database => Hijacker.current_client})
+    if has_hijacker_yml?
+      hijacker_yaml[Hijacker.current_client].present? ? 
+        Hijacker::Database.new_from_yaml(hijacker_yaml[Hijacker.current_client]) :
+        nil
+    else
+      find(:first, :conditions => {:database => Hijacker.current_client})
+    end
   end
 
   # returns a string or nil
   def self.find_master_for(client, try_again=true)
     @masters ||= {}
-    begin
-      @masters[client] ||= self.connection.select_values(
-        "SELECT master.database "\
-        "FROM `databases` AS master, `databases` AS sister "\
-        "WHERE sister.database = #{ActiveRecord::Base.connection.quote(client)} "\
-        "AND sister.master_id = master.id"
-      ).first
-    rescue ActiveRecord::ConnectionNotEstablished
-      ActiveRecord::Base.establish_connection('root')
-      if try_again
-        self.find_master_for(client, false) # one attempt only!
-      else
-        raise "Failed to establish connection"
-      end
+    
+    
+    if has_hijacker_yml?
+      @masters[client] ||= hijacker_yaml[client][:master][:database][:database]
+    else
+      begin
+        @masters[client] ||= self.connection.select_values(
+          "SELECT master.database "\
+          "FROM `databases` AS master, `databases` AS sister "\
+          "WHERE sister.database = #{ActiveRecord::Base.connection.quote(client)} "\
+          "AND sister.master_id = master.id"
+        ).first
+      rescue ActiveRecord::ConnectionNotEstablished
+        ActiveRecord::Base.establish_connection('root')
+        if try_again
+          self.find_master_for(client, false) # one attempt only!
+        else
+          raise "Failed to establish connection"
+        end
+      end      
     end
   end
 
