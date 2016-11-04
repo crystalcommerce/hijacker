@@ -40,24 +40,19 @@ module Hijacker
   # to connect to the database you want, ex Hijacker.connect("database")
   def self.connect(target_name, sister_name = nil, options = {})
     original_database = Hijacker::Database.current
-
     begin
       raise InvalidDatabase.new(nil, 'master cannot be nil') if target_name.nil?
 
       target_name = target_name.downcase
       sister_name = sister_name.downcase unless sister_name.nil?
-
       if already_connected?(target_name, sister_name)
         run_after_hijack_callback
         return "Already connected to #{target_name}"
       end
-
       database = determine_database(target_name, sister_name)
 
       establish_connection_to_database(database)
-
       check_connection
-
       if database.sister?
         self.master = database.master.name
         self.sister = database.name
@@ -68,12 +63,9 @@ module Hijacker
 
       # don't cache sister site
       cache_database_route(target_name, database) unless sister_name
-
       # Do this even on a site without a master so we reconnect these models
       connect_sister_site_models(database.master || database)
-
       reenable_query_caching
-
       run_after_hijack_callback
     rescue
       if original_database.present?
@@ -97,11 +89,10 @@ module Hijacker
                                 else
                                   ActiveRecord::Base.connection_pool
                                 end
-    master_config = connection_config(master_database)
 
+    master_config = connection_config(master_database)
     config[:sister_site_models].each do |model_name|
       klass = model_name.constantize
-
       klass.establish_connection(master_config)
 
       if !master_db_connection_pool
@@ -210,11 +201,36 @@ private
     elsif valid_routes[target_name]
       valid_routes[target_name] # cached valid database
     else
-      database = Hijacker::Alias.find_by_name(target_name).try(:database) ||
-                 Hijacker::Database.find_by_name(target_name)
-      raise(Hijacker::InvalidDatabase.new(target_name)) if database.nil?
+      if has_hijacker_yml?
+        database = get_from_yaml
+      else
+        database = get_from_crystal(target_name)
+      end
       database
     end
+  end
+  
+  def self.hijacker_path
+    Rails.root.join('config', 'hijacker.yml')
+  end
+  
+  def self.hijacker_yaml
+    YAML::load_file(hijacker_path)
+  end
+  
+  def self.has_hijacker_yml?
+    File.exist?(hijacker_path)
+  end  
+  
+  def self.get_from_yaml(target_name)
+    Hijacker::Database.new_from_yaml(hijacker_yaml[target_name.to_s])
+  end
+  
+  def self.get_from_crystal(target_name)
+    database = Hijacker::Alias.find_by_name(target_name).try(:database) ||
+               Hijacker::Database.find_by_name(target_name)
+    raise(Hijacker::InvalidDatabase.new(target_name)) if database.nil?
+    database    
   end
 
   def self.cache_database_route(requested_db_name, actual_database)
