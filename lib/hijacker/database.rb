@@ -66,13 +66,15 @@ class Hijacker::Database < Hijacker::BaseModel
   end
   
   def self.new_from_yaml(data)
-    sisters_data  = data.delete(:sisters)
-    master_data   = data.delete(:master)
-    host_data     = data.delete(:host)
-    data          = data.delete(:database)
-    id            = data.delete(:id)
+    db_data = Marshal.load(Marshal.dump(data))
+    
+    sisters_data  = db_data.delete(:sisters)
+    master_data   = db_data.delete(:master)
+    host_data     = db_data.delete(:host)
+    db_data       = db_data.delete(:database)
+    id            = db_data.delete(:id)
 
-    db = new(data)
+    db = new(db_data)
     db.id   = id
 
     if host_data.present?
@@ -104,11 +106,7 @@ class Hijacker::Database < Hijacker::BaseModel
   end
   
   def self.hijacker_yaml
-    return @@hijacker_yaml if @@hijacker_yaml.present?
-    
-    yaml_hash = YAML::load_file(hijacker_path)
-    @@hijacker_yaml = Marshal.load(Marshal.dump(yaml_hash))
-    @@hijacker_yaml
+    @@hijacker_yaml ||= YAML::load_file(hijacker_path)
   end
   
   def self.has_hijacker_yml?

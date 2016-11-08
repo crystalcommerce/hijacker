@@ -17,7 +17,6 @@ module Hijacker
   class << self
     attr_accessor :config, :master, :sister
     attr_writer :valid_routes
-    @@hijacker_yaml = nil
   end
 
   def self.valid_routes
