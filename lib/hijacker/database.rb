@@ -104,8 +104,7 @@ class Hijacker::Database < Hijacker::BaseModel
   end
   
   def self.hijacker_yaml
-    Rails.logger.info("YAML 2: #{@@hijacker_yaml.present?}")
-    @@hijacker_yaml ||= YAML::load_file(hijacker_path)
+    @@hijacker_yaml ||= HashWithIndifferentAccess.new(YAML::load_file(hijacker_path))
   end
   
   def self.has_hijacker_yml?

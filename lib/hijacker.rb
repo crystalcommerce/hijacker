@@ -55,6 +55,7 @@ module Hijacker
       establish_connection_to_database(database)
       check_connection
       Rails.logger.info("Database: #{database.name} (#{database.sister?})")
+      Rails logger.info(hijacker_yaml)
       if database.sister?
         self.master = database.master.name
         self.sister = database.name
@@ -213,16 +214,15 @@ private
   end
   
   def self.hijacker_path
-    Rails.root.join('config', 'hijacker.yml')
+    Hijacker::Database.hijacker_path
   end
   
   def self.hijacker_yaml
-    Rails.logger.info("YAML 1: #{@@hijacker_yaml.present?}")
-    @@hijacker_yaml ||= YAML::load_file(hijacker_path)
+    Hijacker::Database.hijacker_yaml
   end
   
   def self.has_hijacker_yml?
-    @@hijacker_yaml.present? || File.exist?(hijacker_path)
+    File.exist?(hijacker_path)
   end  
   
   def self.get_from_yaml(target_name)
