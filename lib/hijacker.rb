@@ -54,8 +54,7 @@ module Hijacker
 
       establish_connection_to_database(database)
       check_connection
-      Rails.logger.info("Database: #{database.name} (#{database.sister?})")
-      Rails logger.info(hijacker_yaml)
+
       if database.sister?
         self.master = database.master.name
         self.sister = database.name
