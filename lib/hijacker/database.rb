@@ -104,7 +104,11 @@ class Hijacker::Database < Hijacker::BaseModel
   end
   
   def self.hijacker_yaml
-    @@hijacker_yaml ||= HashWithIndifferentAccess.new(YAML::load_file(hijacker_path))
+    return @@hijacker_yaml if @@hijacker_yaml.present?
+    
+    yaml_hash = YAML::load_file(hijacker_path)
+    @@hijacker_yaml = Marshal.load(Marshal.dump(yaml_hash))
+    @@hijacker_yaml
   end
   
   def self.has_hijacker_yml?
