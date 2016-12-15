@@ -3,11 +3,11 @@
 Gem::Specification.new do |s|
   s.name = %q{dbhijacker}
   s.homepage = "https://github.com/crystalcommerce/hijacker"
-  s.version = "0.10.4"
+  s.version = "0.10.5"
 
   s.license = "MIT"
 
-  s.authors = ["Michael Xavier", "Donald Plummer", "Woody Peterson"]
+  s.authors = ["Michael Xavier", "Donald Plummer", "Woody Peterson", "Marcelo Ribeiro"]
   s.date = %q{2014-06-18}
   s.description = %q{Allows a single Rails appliation to access many different databases}
   s.email = %q{developers@crystalcommerce.com}
