@@ -1,10 +1,20 @@
 require_relative './hijacker/active_record_ext'
 require_relative './hijacker/request_parser'
+require_relative './hijacker/unresponsive_host_error'
+require_relative './hijacker/redis_keys'
+require_relative './hijacker/logging'
 require 'active_record'
 require 'action_controller'
 require 'set'
 
+require_relative '../config/initializers/settings'
+
 module Hijacker
+  extend RedisKeys
+  extend Logging
+
+  DEFAULT_UNRESPONSIVE_DBHOST_COUNT_THRESHOLD = (APP_CONFIG[:unresponsive_dbhost_count_threshold] or 10).to_i
+
   class UnparseableURL < StandardError;end
   class InvalidDatabase < StandardError
     attr_reader :database
@@ -40,6 +50,8 @@ module Hijacker
   # to connect to the database you want, ex Hijacker.connect("database")
   def self.connect(target_name, sister_name = nil, options = {})
     original_database = Hijacker::Database.current
+    database = nil
+    exception = nil
 
     begin
       raise InvalidDatabase.new(nil, 'master cannot be nil') if target_name.nil?
@@ -75,14 +87,46 @@ module Hijacker
       reenable_query_caching
 
       run_after_hijack_callback
-    rescue
-      if original_database.present?
-        establish_connection_to_database(original_database)
-      else
-        self.establish_root_connection
+
+      reset_unresponsive_dbhost(database.host.hostname)
+
+    rescue Mysql2::Error => e
+      if database
+        conn_config = connection_config(database, slave_connection = false, {check_responsiveness: false})
+        increment_unresponsive_dbhost(dbhost(conn_config))
       end
-      raise
+      exception = e
+
+    rescue => e
+      exception = e
+
+    ensure
+      if exception
+        if original_database.present?
+          establish_connection_to_database(original_database)
+        else
+          self.establish_root_connection
+        end
+
+        raise exception 
+      end
     end
+  end
+
+  def self.dbhost(conn_config)
+    (conn_config and conn_config.has_key?(:host) and conn_config[:host])
+  end
+
+  def self.dbhost_available?(db_host)
+    (db_host and (redis_unresponsive_dbhost_count(db_host) < unresponsive_dbhost_count_threshold))
+  end
+
+  def self.increment_unresponsive_dbhost(db_host)
+    (db_host and (redis_increment_unresponsive_dbhost(db_host)))
+  end
+
+  def self.reset_unresponsive_dbhost(db_host)
+    (db_host and (redis_reset_unresponsive_dbhost(db_host)))
   end
 
   def self.slave_connect(target_name, sister_name = nil, options = {})
@@ -243,12 +287,28 @@ private
     end
   end
 
-  def self.connection_config(database, slave_connection = false)
+  # Translate from ip address to host name.  Simply return the ip address if
+  # there is no matching translation.
+  def self.translate_host_ip(host_ip_address)
+    redis_translation_table.fetch(host_ip_address, host_ip_address)
+  end
+
+  # TODO: fold slave_connection into options hash; not sure what kind of impact
+  # it would have to refactor that at this time since it was pre-existing.
+  def self.connection_config(database, slave_connection = false, options={check_responsiveness: true})
     host = slave_connection ? database.host.slave : database.host
     host ||= database.host
     hostname = host.hostname
     port = host.port || root_config['port']
-    root_config.merge('database' => database.name, 'host' => hostname, 'port' => port)
+    conn_config = root_config.merge('database' => database.name, 'host' => hostname, 'port' => port)
+
+    if options[:check_responsiveness] and !dbhost_available?(dbhost(conn_config))
+      error = UnresponsiveHostError.new(conn_config)
+      logger.debug error.message
+      raise error
+    end
+
+    conn_config
   end
 
   def self.run_after_hijack_callback
@@ -262,3 +322,7 @@ require_relative './hijacker/alias'
 require_relative './hijacker/host'
 require_relative './hijacker/middleware'
 require_relative './hijacker/controller_methods'
+
+require 'redis'
+require_relative '../config/initializers/redis'
+

@@ -154,6 +154,36 @@ module Hijacker
           end
         end
       end
+
+      context "associated db host responsiveness" do
+        before do
+          allow(Hijacker).to receive(:dbhost_available?).and_return false
+          allow(Hijacker).to receive(:translate_host_ip).and_return("ds9999")
+
+          $hijacker_redis.del(Hijacker.redis_key(Hijacker::REDIS_UNRESPONSIVE_DBHOST_COUNT_THRESHOLD_KEY)) if Hijacker.rails_env == 'test'
+        end
+
+        it "returns a 502" do
+          resp = make_request
+          expect(resp.status).to eq(502)
+          expect(resp.body).to eq("Database host localhost (ds9999) has been marked as unresponsive; unable to connect to foo")
+        end
+
+        context "custom bad url handler" do
+          def app
+            Rack::Builder.new do
+              use Hijacker::Middleware, :unresponsive_host => ->(message, env) { [502, {}, "The db host is unresponsive.  #{message}"]}
+              run lambda { |env| [200, { 'blah' => 'blah' }, ["success"]] }
+            end
+          end
+
+          it "uses the custom unresponsive host handler" do
+            resp = make_request
+            expect(resp.status).to eq(502)
+            expect(resp.body).to eq("The db host is unresponsive.  Database host localhost (ds9999) has been marked as unresponsive; unable to connect to foo")
+          end
+        end
+      end
     end
   end
 end

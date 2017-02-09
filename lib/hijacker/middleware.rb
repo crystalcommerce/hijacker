@@ -7,14 +7,18 @@ module Hijacker
     DEFAULT_BAD_URL = ->(message, env) {
       [404, {}, [message]]
     }
+    UNRESPONSIVE_URL = ->(message, env) {
+      [502, {}, [message]]
+    }
 
-    attr_reader :not_found, :bad_url
+    attr_reader :not_found, :bad_url, :unresponsive_host
 
     def initialize(app, options = {})
       options = options.dup
       @app = app
       @not_found = options.delete(:not_found) || DEFAULT_NOT_FOUND
       @bad_url   = options.delete(:bad_url)   || DEFAULT_BAD_URL
+      @unresponsive_host   = options.delete(:unresponsive_host)   || UNRESPONSIVE_URL
 
       unless options.blank?
         raise "Unknown Hijacker::Middleware options #{options.keys.join(",")}"
@@ -28,6 +32,8 @@ module Hijacker
         return not_found.call(e.database, env)
       rescue Hijacker::UnparseableURL => e
         return bad_url.call(e.message, env)
+      rescue Hijacker::UnresponsiveHostError => e
+        return unresponsive_host.call(e.message, env)
       end
 
       @app.call(env)

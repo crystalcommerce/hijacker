@@ -1,0 +1,21 @@
+defaults: &defaults
+  :unresponsive_dbhost_count_threshold: 10
+
+development:
+  <<: *defaults
+
+test:
+  <<: *defaults
+
+sister_test:
+  <<: *defaults
+
+cucumber:
+  <<: *defaults
+
+stage_production:
+  <<: *defaults
+
+production:
+  <<: *defaults
+
