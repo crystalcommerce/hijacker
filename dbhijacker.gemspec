@@ -3,16 +3,17 @@
 Gem::Specification.new do |s|
   s.name = %q{dbhijacker}
   s.homepage = "https://github.com/crystalcommerce/hijacker"
-  s.version = "0.10.5"
+  s.version = "0.11.0"
 
   s.license = "MIT"
 
-  s.authors = ["Michael Xavier", "Donald Plummer", "Woody Peterson", "Marcelo Ribeiro"]
+  s.authors = ["Michael Xavier", "Donald Plummer", "Woody Peterson", "Marcelo Ribeiro", "David C. Vezzani"]
   s.date = %q{2014-06-18}
   s.description = %q{Allows a single Rails appliation to access many different databases}
   s.email = %q{developers@crystalcommerce.com}
 
   s.add_dependency("rails", ">= 2.3.14", "< 4.0")
+  s.add_runtime_dependency("redis", "~> 3.0.7")
 
   s.add_development_dependency "bundler"
   s.add_development_dependency "guard"
@@ -23,6 +24,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency "rack",      ">= 1.1.0"
   s.add_development_dependency "rspec",     "~> 2.8"
   s.add_development_dependency "sqlite3",   "~> 1.3.5"
+  s.add_development_dependency "test-unit",   "~> 3.0"
 
   s.extra_rdoc_files = [
     "README.rdoc"
@@ -36,7 +38,16 @@ Gem::Specification.new do |s|
     Rakefile
     example_root_schema.rb
     dbhijacker.gemspec
+    config/redis.yml
+    config/settings.yml
+    config/initializers/redis.rb
+    config/initializers/settings.rb
+    lib/configuration/redis_configuration.rb
     lib/dbhijacker.rb
+    lib/hijacker/unresponsive_host_error.rb
+    lib/hijacker/logging.rb
+    lib/hijacker/redis_keys.rb
+    lib/hijacker/redis.rb
     lib/hijacker.rb
     lib/hijacker/active_record_ext.rb
     lib/hijacker/alias.rb
@@ -50,7 +61,11 @@ Gem::Specification.new do |s|
     spec/hijacker/database_spec.rb
     spec/hijacker/host_spec.rb
     spec/hijacker/middleware_spec.rb
+    spec/support/redis_keys_module.rb
+    spec/support/alt_host_translations.csv
+    spec/support/shared_contexts/rake.rb
     spec/hijacker_spec.rb
+    spec/rake_tasks_spec.rb
     spec/spec_helper.rb
     tasks/hijacker_tasks.rake
   }
@@ -62,7 +77,12 @@ Gem::Specification.new do |s|
     spec/hijacker/database_spec.rb
     spec/hijacker/host_spec.rb
     spec/hijacker/middleware_spec.rb
+    spec/hijacker/redis_keys_spec.rb
+    spec/support/redis_keys_module.rb
+    spec/support/alt_host_translations.csv
+    spec/support/shared_contexts/rake.rb
     spec/hijacker_spec.rb
+    spec/rake_tasks_spec.rb
     spec/spec_helper.rb
   }
 end

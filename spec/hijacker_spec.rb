@@ -1,12 +1,20 @@
 require "spec_helper"
+require 'hijacker/redis_keys'
+require 'support/redis_keys_module'
 
 describe Hijacker do
+  include RedisKeysModule::Helper
+  Hijacker.logger.level = 100 # keep the logging quiet during the tests
+
   let(:hosted_environments) { %w[staging production] }
 
   before(:each) do
     Hijacker.config = {
       :hosted_environments => hosted_environments
     }
+
+    $hijacker_redis.del('test:hijacker:unresponsive-dbhosts:threshold-count')
+    $hijacker_redis.del('test:hijacker:unresponsive-dbhosts')
   end
 
   let!(:host) { Hijacker::Host.create!(:hostname => "localhost") }
@@ -167,6 +175,84 @@ describe Hijacker do
         it "calls the callback" do
           spy.should_receive(:call)
           subject.connect('master_db')
+        end
+      end
+
+      context "should record requests to unresponsive hosts" do
+        before(:each) do
+          @unresponsive_host = Hijacker::Host.create!({hostname: 'bogus'})
+          @junk_database = Hijacker::Database.create!({database: 'junk', host_id: @unresponsive_host.id})
+
+          $hijacker_redis.del(redis_keys(:unresponsive_dbhost_count_threshold))
+          @prev_threshold_count = $hijacker_redis.get('test:hijacker:unresponsive-dbhosts:threshold-count')
+          $hijacker_redis.set('test:hijacker:unresponsive-dbhosts:threshold-count', 3)
+          $hijacker_redis.del('test:hijacker:unresponsive-dbhosts')
+        end
+
+        after(:each) do
+          @junk_database.destroy
+          @unresponsive_host.destroy
+          $hijacker_redis.set('test:hijacker:unresponsive-dbhosts:threshold-count', @prev_threshold_count)
+        end
+
+        it "determines a host is unresponsive" do
+          expect(Hijacker).to receive(:dbhost_available?).and_return false
+          expect{subject.connect('junk')}.to raise_error(Hijacker::UnresponsiveHostError)
+        end
+
+        it "keeps count of failed attempts to connect" do
+          allow(Hijacker).to receive(:check_connection).and_raise Mysql2::Error.new "Can't connect to MySQL server on '#{@unresponsive_host.hostname}' (111)"
+
+          # one call to connection_config when attempting to connect (3 times)
+          #
+          # one call to connection_config when simply trying to get the
+          # connection information without checking for db host availability (4 times)
+          #
+          expect(Hijacker).to receive(:connection_config).exactly(7).times.and_call_original
+
+          expect(subject.redis_unresponsive_dbhost_count('bogus')).to eq 0
+          expect(subject.dbhost_available?('bogus')).to be true
+
+          # 1. unresponsive
+          # 2. unresponsive
+          # 3. unresponsive
+          # 4. host is disabled; no futher connections will be entertained
+          (1..4).each do
+            begin
+              subject.connect('junk')
+            rescue
+            end
+          end
+
+          expect(subject.redis_unresponsive_dbhost_count('bogus')).to eq 3
+          expect(subject.dbhost_available?('bogus')).to be false
+        end
+
+        it "resets count back to zero if successful connection is made before threshold is hit" do
+
+          # Simulate 2 calls resulting in no response from db host followed by others that are successful
+          # and once a successful call is found _before_ the threshold is met, the host counter is reset to 0
+          @cnt = 0
+          allow(Hijacker).to receive(:check_connection) do
+            @cnt += 1
+            raise Mysql2::Error.new "Can't connect to MySQL server on '#{@unresponsive_host.hostname}' (111)" if @cnt <= 2
+          end
+
+          expect(subject.redis_unresponsive_dbhost_count('bogus')).to eq 0
+          expect(subject.dbhost_available?('bogus')).to be true
+
+          # 1. unresponsive
+          # 2. unresponsive
+          # 3. connection made; counter is reset
+          (1..3).each do
+            begin
+              subject.connect('junk')
+            rescue
+            end
+          end
+
+          expect(subject.redis_unresponsive_dbhost_count('bogus')).to eq 0
+          expect(subject.dbhost_available?('bogus')).to be true
         end
       end
     end

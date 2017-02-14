@@ -1,11 +1,14 @@
 ---
-root:
+defaults: &defaults
   adapter: mysql2
   database: dbhijacker_root
   port: 3311
   user: root
+  connect_timeout: 1
+
+root:
+  <<: *defaults
+
 test:
-  adapter: mysql2
-  database: store1
-  port: 3311
-  user: root
+  <<: *defaults
+

@@ -7,3 +7,10 @@ localhost.err
 .rvmrc
 foo
 sample-db
+
+# vim
+.sw*
+.*.sw*
+
+# mac
+.DS_Store
