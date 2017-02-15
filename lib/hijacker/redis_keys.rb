@@ -139,5 +139,35 @@ module Hijacker
         {}
       end
     end
+
+    def dbhost_available?(host, options={})
+      available = (host and (redis_unresponsive_dbhost_count(host) < unresponsive_dbhost_count_threshold))
+
+      if !available and options.has_key?(:host_id)
+        redis_add_unresponsive_dbhost_id(options[:host_id])
+      end
+
+      available
+    end
+
+    def increment_unresponsive_dbhost(host)
+      if host
+        redis_increment_unresponsive_dbhost(host)
+      end
+    end
+
+    def reset_unresponsive_dbhost(host)
+      if host
+        redis_reset_unresponsive_dbhost(host[:hostname]) if host.has_key?(:hostname)
+        redis_remove_unresponsive_dbhost_id(host[:id]) if host.has_key?(:id)
+      end
+    end
+      
+    # Translate from ip address to host name.  Simply return the ip address if
+    # there is no matching translation.
+    def translate_host_ip(host_ip_address)
+      redis_translation_table.fetch(host_ip_address, host_ip_address)
+    end
+    
   end
 end

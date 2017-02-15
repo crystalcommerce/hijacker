@@ -3,6 +3,7 @@ require_relative './hijacker/request_parser'
 require_relative './hijacker/unresponsive_host_error'
 require_relative './hijacker/redis_keys'
 require_relative './hijacker/logging'
+require_relative './hijacker/mysql_errors'
 require 'active_record'
 require 'action_controller'
 require 'set'
@@ -12,6 +13,7 @@ require_relative '../config/initializers/settings'
 module Hijacker
   extend RedisKeys
   extend Logging
+  extend MysqlErrors
 
   DEFAULT_UNRESPONSIVE_DBHOST_COUNT_THRESHOLD = (APP_CONFIG[:unresponsive_dbhost_count_threshold] or 10).to_i
 
@@ -91,7 +93,7 @@ module Hijacker
       reset_unresponsive_dbhost(host_data(database.host))
 
     rescue Mysql2::Error => e
-      if database
+      if database and mysql_error_is?(e, MYSQL_UNRESPONSIVE_HOST)
         conn_config = connection_config(database, slave_connection = false, {check_responsiveness: false})
         increment_unresponsive_dbhost(dbhost(conn_config))
         exception = UnresponsiveHostError.new(conn_config, {source_error: e})
@@ -121,29 +123,6 @@ module Hijacker
 
   def self.dbhost(conn_config)
     (conn_config and conn_config.has_key?(:host) and conn_config[:host])
-  end
-
-  def self.dbhost_available?(host, options={})
-    available = (host and (redis_unresponsive_dbhost_count(host) < unresponsive_dbhost_count_threshold))
-
-    if !available and options.has_key?(:host_id)
-      redis_add_unresponsive_dbhost_id(options[:host_id])
-    end
-
-    available
-  end
-
-  def self.increment_unresponsive_dbhost(host)
-    if host
-      redis_increment_unresponsive_dbhost(host)
-    end
-  end
-
-  def self.reset_unresponsive_dbhost(host)
-    if host
-      redis_reset_unresponsive_dbhost(host[:hostname]) if host.has_key?(:hostname)
-      redis_remove_unresponsive_dbhost_id(host[:id]) if host.has_key?(:id)
-    end
   end
 
   def self.slave_connect(target_name, sister_name = nil, options = {})
@@ -302,12 +281,6 @@ private
       ::ActiveRecord::Base.connection.instance_variable_set("@query_cache_enabled", true)
       ::ActiveRecord::Base.connection.cache do;end
     end
-  end
-
-  # Translate from ip address to host name.  Simply return the ip address if
-  # there is no matching translation.
-  def self.translate_host_ip(host_ip_address)
-    redis_translation_table.fetch(host_ip_address, host_ip_address)
   end
 
   # TODO: fold slave_connection into options hash; not sure what kind of impact
