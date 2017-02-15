@@ -132,26 +132,30 @@ class Hijacker::Database < Hijacker::BaseModel
   # Hijacker::Database.connect_each(Hijacker::Database.all, {validate_unresponsive_hosts: false}) do |db| ... end
   #
   def self.connect_each(sites = with_responsive_hosts.map(&:database), options={})
-    options = {validate_unresponsive_hosts: true}.merge(options)
+    options = {validate_connections: true, validate_unresponsive_hosts: true}.merge(options)
 
     original_database = Hijacker.current_client
     begin
       sites.each do |db|
         begin
           Hijacker.connect_to_master(db)
-        rescue MissingDatabaseError
-          Hijacker.logger.debug "the #{db} database is missing"
+
+        rescue Hijacker::UnresponsiveHostError => error
+          Hijacker.logger.warn "[Hijacker::Database] unable to connect to #{db}; #{error.message}"
+          raise unless(options[:validate_connections] and options[:validate_unresponsive_hosts])
           next
-        rescue Hijacker::UnresponsiveHostError
-          Hijacker.logger.debug "the host associated with #{db} is unresponsive"
-          raise unless options[:validate_unresponsive_hosts]
+
+        rescue => error # MissingDatabaseError
+          Hijacker.logger.warn "[Hijacker::Database] unable to connect to #{db}; #{error.message}"
+          raise unless options[:validate_connections]
           next
         end
+
         yield db
       end
     ensure
       begin
-        Hijacker.logger.debug "reconnecting to #{(original_database and original_database.attributes)}"
+        Hijacker.logger.debug "reconnecting to #{(original_database and original_database.attributes)}"         
         Hijacker.connect_to_master(original_database)
       rescue MissingDatabaseError
       end

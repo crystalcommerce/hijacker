@@ -261,6 +261,131 @@ describe Hijacker do
         end
       end
 
+      context "mysql error handling" do
+        let!(:host2) { Hijacker::Host.create!(:hostname => "tree") }
+        let!(:host3) { Hijacker::Host.create!(:hostname => "vine") }
+        let!(:host4) { Hijacker::Host.create!(:hostname => "bush") }
+        let!(:host5)  { Hijacker::Host.create!(:hostname => "missing") }
+
+        let!(:apple) { Hijacker::Database.create!(:database => "apple", :host_id => host2.id) }
+        let!(:cherry) { Hijacker::Database.create!(:database => "cherry", :host_id => host2.id) }
+        let!(:orange) { Hijacker::Database.create!(:database => "orange", :host_id => host2.id) }
+        let!(:lemon) { Hijacker::Database.create!(:database => "lemon", :host_id => host2.id) }
+        let!(:polmegranite) { Hijacker::Database.create!(:database => "polmegranite", :host_id => host4.id) }
+        let!(:boysenberry) { Hijacker::Database.create!(:database => "boysenberry", :host_id => host3.id) }
+        let!(:grape) { Hijacker::Database.create!(:database => "grape", :host_id => host3.id) }
+        let!(:tomato) { Hijacker::Database.create!(:database => "tomato", :host_id => host5.id) }
+
+        let(:error_table) { HashWithIndifferentAccess.new({
+          polmegranite: (Mysql2::Error.new "Can't connect to MySQL server on '#{polmegranite.host.hostname}' (111)"), # Hijacker::MYSQL_UNRESPONSIVE_HOST
+          tomato: (Mysql2::Error.new "Unknown MySQL server host '#{tomato.host.hostname}'"), # Hijacker::MYSQL_UNKNOWN_HOST
+          peach: (Mysql2::Error.new "Unknown database 'peach'"), # Hijacker::MYSQL_UNKNOWN_DB
+          grape: (Mysql2::Error.new "Access denied for user 'crystal'@'#{polmegranite.host.hostname}'"), # Hijacker::MYSQL_ACCESS_DENIED
+          cherry: (Mysql2::Error.new "Some other MySQL error for 'cherry' on '#{cherry.host.hostname}'") # Hijacker::MYSQL_GENERIC
+        })}
+
+        let!(:establish_connection_to_database) {
+          class << Hijacker
+            alias_method :establish_connection_to_database_without_patch, :establish_connection_to_database
+          end
+        }
+        
+        let!(:check_connection_without_patch) {
+          class << Hijacker
+            alias_method :check_connection_without_patch, :check_connection
+            attr_accessor :current_config
+          end
+        }
+
+        before(:each) do
+          allow(Hijacker).to receive(:establish_connection_to_database){ |database, slave_connection = false|
+            Hijacker.instance_exec do
+              @current_config = connection_config(database, slave_connection)
+              ::ActiveRecord::Base.establish_connection(current_config)
+            end
+          }
+          
+          allow(Hijacker).to receive(:check_connection) do
+            error = error_table[Hijacker.current_config['database']]
+            raise error unless error.nil?
+          end
+
+          @counts = {
+            Hijacker::MYSQL_GENERIC => 0, 
+            Hijacker::MYSQL_ACCESS_DENIED => 0, 
+            Hijacker::MYSQL_UNKNOWN_DB => 0, 
+            Hijacker::MYSQL_UNKNOWN_HOST => 0, 
+            Hijacker::MYSQL_UNRESPONSIVE_HOST => 0
+          }
+        end
+
+        it "handles different kinds of mysql errors" do
+          Hijacker::Database.connect_each do |db|
+            ActiveRecord::Base.connection.execute("select 'asdf'")
+          end
+        end
+
+        it "exposes unresponsive host error" do
+          begin
+            Hijacker::Database.connect_each(['polmegranite'], {validate_connections: false}) do |db|
+              ActiveRecord::Base.connection.execute("select 'asdf'")
+            end
+          rescue => e
+            @counts[e.class] += 1
+          end
+
+          expect(@counts).to eq( @counts.merge({Hijacker::MYSQL_UNRESPONSIVE_HOST => 1}) )
+        end
+
+        it "exposes unknown host error" do
+          begin
+            Hijacker::Database.connect_each(['tomato'], {validate_connections: false}) do |db|
+              ActiveRecord::Base.connection.execute("select 'asdf'")
+            end
+          rescue => e
+            @counts[e.class] += 1
+          end
+
+          expect(@counts).to eq( @counts.merge({Hijacker::MYSQL_UNKNOWN_HOST => 1}) )
+        end
+
+        it "exposes unknown database error" do
+          begin
+            Hijacker::Database.connect_each(['peach'], {validate_connections: false}) do |db|
+              ActiveRecord::Base.connection.execute("select 'asdf'")
+            end
+          rescue => e
+            @counts[e.class] += 1
+          end
+
+          expect(@counts).to eq( @counts.merge({Hijacker::MYSQL_UNKNOWN_DB => 1}) )
+        end
+
+        it "exposes access denied error" do
+          begin
+            Hijacker::Database.connect_each(['grape'], {validate_connections: false}) do |db|
+              ActiveRecord::Base.connection.execute("select 'asdf'")
+            end
+          rescue => e
+            @counts[e.class] += 1
+          end
+
+          expect(@counts).to eq( @counts.merge({Hijacker::MYSQL_ACCESS_DENIED => 1}) )
+        end
+
+        it "exposes access denied error" do
+          begin
+            Hijacker::Database.connect_each(['cherry'], {validate_connections: false}) do |db|
+              ActiveRecord::Base.connection.execute("select 'asdf'")
+            end
+          rescue => e
+            @counts[e.class] += 1
+          end
+
+          expect(@counts).to eq( @counts.merge({Hijacker::MYSQL_GENERIC => 1}) )
+        end
+      end
+      
       context "should record requests to unresponsive hosts" do
         before(:each) do
           @unresponsive_host = Hijacker::Host.create!({hostname: 'bogus'})
