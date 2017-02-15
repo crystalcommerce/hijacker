@@ -37,6 +37,18 @@ class Hijacker::Database < Hijacker::BaseModel
 
   alias_attribute :name, :database
 
+  def self.cached_unresponsive_host_ids
+    Hijacker.redis_all_unresponsive_dbhost_ids
+  end
+
+  scope :with_responsive_hosts, ->(*_) {
+    host_ids = cached_unresponsive_host_ids
+    if(host_ids and host_ids.length > 0)
+      where(["host_id not in (?)", host_ids])
+    else
+      scoped
+    end
+  }
 
   def sister?
     master_id.present?
@@ -108,13 +120,29 @@ class Hijacker::Database < Hijacker::BaseModel
     )
   end
 
-  def self.connect_each(sites = all.map(&:database))
+  # Now by default, unresponsive hosts will be filtered out
+  #
+  # Also, if a host triggers an unresponsive response before the threshold is
+  # met, the bad database threshold count is incremented and the loop continues
+  # to the next database
+  #
+  # In some cases, it may still be desireable to allow exceptions to be raised.
+  # That behavior can be accomplished as follows:
+  #
+  # Hijacker::Database.connect_each(Hijacker::Database.all, {validate_unresponsive_hosts: false}) do |db| ... end
+  #
+  def self.connect_each(sites = with_responsive_hosts.map(&:database), options={})
+    options = {validate_unresponsive_hosts: true}.merge(options)
+
     original_database = Hijacker.current_client
     begin
       sites.each do |db|
         begin
           Hijacker.connect_to_master(db)
         rescue MissingDatabaseError
+          next
+        rescue Hijacker::UnresponsiveHostError
+          raise unless options[:validate_unresponsive_hosts]
           next
         end
         yield db

@@ -2,6 +2,10 @@ require "spec_helper"
 
 module Hijacker
   describe Database do
+    # before(:each) do
+    #   $hijacker_redis.del('test:hijacker:unresponsive-dbhost-ids')
+    # end
+    
     let(:host) { Hijacker::Host.create!(:hostname => "localhost") }
     let(:alias_db) { Hijacker::Alias.new(:name => "alias_db") }
 
@@ -42,7 +46,7 @@ module Hijacker
       end
 
       before (:each) do
-        Database.stub(:all).and_return([ db("one"), db("two"), db("three") ])
+        Database.stub(:with_responsive_hosts).and_return([ db("one"), db("two"), db("three") ])
         Hijacker.stub(:connect)
       end
 
@@ -51,7 +55,7 @@ module Hijacker
         Database.connect_each do |db|
           count += 1
         end
-        count.should == Database.all.size
+        count.should == Database.with_responsive_hosts.size
       end
 
       it "Passes the name of the database to the block" do
@@ -59,12 +63,12 @@ module Hijacker
         Database.connect_each do |db|
           db_names << db
         end
-        db_names.should == Database.all.map(&:database)
+        db_names.should == Database.with_responsive_hosts.map(&:database)
       end
 
       it "connects to each of the database and reconnects to the original" do
         original_db = Hijacker::Database.current
-        Hijacker.should_receive(:connect).exactly(Database.all.size + 1).times
+        Hijacker.should_receive(:connect).exactly(Database.with_responsive_hosts.size + 1).times
         Database.connect_each {}
 
         Hijacker::Database.current.should == original_db

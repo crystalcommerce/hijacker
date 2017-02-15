@@ -15,6 +15,7 @@ describe Hijacker do
 
     $hijacker_redis.del('test:hijacker:unresponsive-dbhosts:threshold-count')
     $hijacker_redis.del('test:hijacker:unresponsive-dbhosts')
+    $hijacker_redis.del('test:hijacker:unresponsive-dbhost-ids')
   end
 
   let!(:host) { Hijacker::Host.create!(:hostname => "localhost") }
@@ -175,6 +176,88 @@ describe Hijacker do
         it "calls the callback" do
           spy.should_receive(:call)
           subject.connect('master_db')
+        end
+      end
+
+      context "uses scope to filter out unresponsive hosts for #connect_each" do
+        let!(:create_unresponsive_host) { Hijacker::Host.create!(:hostname => "bad.host", :port => 9999) }
+        let(:unresponsive_host) { Hijacker::Host.where(:port => 9999).first }
+        
+        let!(:apple) { Hijacker::Database.create!(:database => "apple", :host_id => host.id) }
+        let!(:cherry) { Hijacker::Database.create!(:database => "cherry", :host_id => unresponsive_host.id) }
+        let!(:grape) { Hijacker::Database.create!(:database => "grape", :host_id => host.id) }
+
+        let!(:check_connection_without_patch) {
+          class << Hijacker
+            alias_method :check_connection_without_patch, :check_connection
+            attr_accessor :current_config
+          end
+        }
+        let!(:establish_connection_to_database) {
+          class << Hijacker
+            alias_method :establish_connection_to_database_without_patch, :establish_connection_to_database
+          end
+        }
+
+        before do
+
+          # Obviously, the tests which use Sqlite3 will never raise a Mysql2::Error, but the production code
+          # will be using Mysql.
+          #
+          allow(Hijacker).to receive(:check_connection){
+            Hijacker.instance_exec do
+              raise Mysql2::Error.new "Can't connect to MySQL server on '#{current_config['host']}' (111)" if current_config['database'] == 'cherry'
+              check_connection_without_patch
+            end
+          }
+          
+          # Sqlite ActiveRecord::Base.connection.config is different from that for MySql, 
+          # so for testing, we need to create a handle that allows us to introspect the 
+          # configuration so that we can create a spy to look for a particular
+          # host and treat it as though it were unresponsive
+          #
+          allow(Hijacker).to receive(:establish_connection_to_database){ |database, slave_connection = false|
+            Hijacker.instance_exec do
+              @current_config = connection_config(database, slave_connection)
+              ::ActiveRecord::Base.establish_connection(current_config)
+            end
+          }
+        end
+
+        # Expects there to be no unhandled exceptions raised
+        it "iterates through all responsive hosts" do
+          Hijacker::Database.connect_each do |db|
+            ActiveRecord::Base.connection.execute("select 'asdf'")
+          end
+        end
+
+        it "skips and processes all other unaffected databases" do
+          @db_cnt = 0
+          Hijacker::Database.connect_each do |db|
+            ActiveRecord::Base.connection.execute("select 'asdf'")
+            @db_cnt += 1
+          end
+
+          expect(@db_cnt).to eq 3
+        end
+
+        it "records one db host as unresponsive" do
+          Hijacker::Database.connect_each do |db|
+            ActiveRecord::Base.connection.execute("select 'asdf'")
+          end
+
+          expect($hijacker_redis.hgetall('test:hijacker:unresponsive-dbhosts')).to eq({"localhost"=>"0", "bad.host"=>"1"})
+        end
+
+        it "skips db hosts that have hit the count threshold" do
+          $hijacker_redis.hset('test:hijacker:unresponsive-dbhosts', 'bad.host', 10)
+
+          responsive_dbhosts = []
+          Hijacker::Database.connect_each do |db|
+            responsive_dbhosts << db
+          end
+
+          expect(responsive_dbhosts).to eq(["master_db", "apple", "grape"])
         end
       end
 

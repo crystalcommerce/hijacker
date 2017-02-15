@@ -88,14 +88,16 @@ module Hijacker
 
       run_after_hijack_callback
 
-      reset_unresponsive_dbhost(database.host.hostname)
+      reset_unresponsive_dbhost(host_data(database.host))
 
     rescue Mysql2::Error => e
       if database
         conn_config = connection_config(database, slave_connection = false, {check_responsiveness: false})
         increment_unresponsive_dbhost(dbhost(conn_config))
+        exception = UnresponsiveHostError.new(conn_config, {source_error: e})
+      else
+        exception = e
       end
-      exception = e
 
     rescue => e
       exception = e
@@ -113,20 +115,35 @@ module Hijacker
     end
   end
 
+  def self.host_data(host)
+    HashWithIndifferentAccess.new(host.attributes.select{|attr, value| %w{id hostname}.include?(attr.to_s) })
+  end
+
   def self.dbhost(conn_config)
     (conn_config and conn_config.has_key?(:host) and conn_config[:host])
   end
 
-  def self.dbhost_available?(db_host)
-    (db_host and (redis_unresponsive_dbhost_count(db_host) < unresponsive_dbhost_count_threshold))
+  def self.dbhost_available?(host, options={})
+    available = (host and (redis_unresponsive_dbhost_count(host) < unresponsive_dbhost_count_threshold))
+
+    if !available and options.has_key?(:host_id)
+      redis_add_unresponsive_dbhost_id(options[:host_id])
+    end
+
+    available
   end
 
-  def self.increment_unresponsive_dbhost(db_host)
-    (db_host and (redis_increment_unresponsive_dbhost(db_host)))
+  def self.increment_unresponsive_dbhost(host)
+    if host
+      redis_increment_unresponsive_dbhost(host)
+    end
   end
 
-  def self.reset_unresponsive_dbhost(db_host)
-    (db_host and (redis_reset_unresponsive_dbhost(db_host)))
+  def self.reset_unresponsive_dbhost(host)
+    if host
+      redis_reset_unresponsive_dbhost(host[:hostname]) if host.has_key?(:hostname)
+      redis_remove_unresponsive_dbhost_id(host[:id]) if host.has_key?(:id)
+    end
   end
 
   def self.slave_connect(target_name, sister_name = nil, options = {})
@@ -302,7 +319,7 @@ private
     port = host.port || root_config['port']
     conn_config = root_config.merge('database' => database.name, 'host' => hostname, 'port' => port)
 
-    if options[:check_responsiveness] and !dbhost_available?(dbhost(conn_config))
+    if options[:check_responsiveness] and !dbhost_available?(dbhost(conn_config), {host_id: host.id})
       error = UnresponsiveHostError.new(conn_config)
       logger.debug error.message
       raise error
