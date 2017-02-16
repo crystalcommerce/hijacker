@@ -28,7 +28,7 @@ module Hijacker
         MYSQL_GENERIC
       end
 
-      logger.debug "error discovered; #{error_type}"
+      logger.warn "[Hijacker::MysqlErrors] error discovered; #{error_type}, #{e.message}"
       error_type
     end
 
