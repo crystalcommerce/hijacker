@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    dbhijacker (0.11.0)
+    dbhijacker (0.12.1)
       rails (>= 2.3.14, < 4.0)
       redis (~> 3.0.7)
 

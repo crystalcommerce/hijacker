@@ -3,6 +3,7 @@ require_relative './hijacker/request_parser'
 require_relative './hijacker/unresponsive_host_error'
 require_relative './hijacker/redis_keys'
 require_relative './hijacker/logging'
+require_relative './hijacker/mysql_errors'
 require 'active_record'
 require 'action_controller'
 require 'set'
@@ -12,6 +13,7 @@ require_relative '../config/initializers/settings'
 module Hijacker
   extend RedisKeys
   extend Logging
+  extend MysqlErrors
 
   DEFAULT_UNRESPONSIVE_DBHOST_COUNT_THRESHOLD = (APP_CONFIG[:unresponsive_dbhost_count_threshold] or 10).to_i
 
@@ -88,14 +90,16 @@ module Hijacker
 
       run_after_hijack_callback
 
-      reset_unresponsive_dbhost(database.host.hostname)
+      reset_unresponsive_dbhost(host_data(database.host))
 
     rescue Mysql2::Error => e
-      if database
+      if database and mysql_error_is?(e, MYSQL_UNRESPONSIVE_HOST)
         conn_config = connection_config(database, slave_connection = false, {check_responsiveness: false})
         increment_unresponsive_dbhost(dbhost(conn_config))
+        exception = UnresponsiveHostError.new(conn_config, {source_error: e})
+      else
+        exception = e
       end
-      exception = e
 
     rescue => e
       exception = e
@@ -113,20 +117,12 @@ module Hijacker
     end
   end
 
+  def self.host_data(host)
+    HashWithIndifferentAccess.new(host.attributes.select{|attr, value| %w{id hostname}.include?(attr.to_s) })
+  end
+
   def self.dbhost(conn_config)
     (conn_config and conn_config.has_key?(:host) and conn_config[:host])
-  end
-
-  def self.dbhost_available?(db_host)
-    (db_host and (redis_unresponsive_dbhost_count(db_host) < unresponsive_dbhost_count_threshold))
-  end
-
-  def self.increment_unresponsive_dbhost(db_host)
-    (db_host and (redis_increment_unresponsive_dbhost(db_host)))
-  end
-
-  def self.reset_unresponsive_dbhost(db_host)
-    (db_host and (redis_reset_unresponsive_dbhost(db_host)))
   end
 
   def self.slave_connect(target_name, sister_name = nil, options = {})
@@ -287,12 +283,6 @@ private
     end
   end
 
-  # Translate from ip address to host name.  Simply return the ip address if
-  # there is no matching translation.
-  def self.translate_host_ip(host_ip_address)
-    redis_translation_table.fetch(host_ip_address, host_ip_address)
-  end
-
   # TODO: fold slave_connection into options hash; not sure what kind of impact
   # it would have to refactor that at this time since it was pre-existing.
   def self.connection_config(database, slave_connection = false, options={check_responsiveness: true})
@@ -302,7 +292,7 @@ private
     port = host.port || root_config['port']
     conn_config = root_config.merge('database' => database.name, 'host' => hostname, 'port' => port)
 
-    if options[:check_responsiveness] and !dbhost_available?(dbhost(conn_config))
+    if options[:check_responsiveness] and !dbhost_available?(dbhost(conn_config), {host_id: host.id})
       error = UnresponsiveHostError.new(conn_config)
       logger.debug error.message
       raise error

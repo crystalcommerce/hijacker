@@ -1,12 +1,13 @@
 module Hijacker
   class UnresponsiveHostError < StandardError
-    attr_reader :config, :host, :database_name, :custom_message
+    attr_reader :config, :host, :database_name, :original_error, :custom_message
 
-    def initialize(config={}, custom_message = nil)
-      @config = config
-      @host = config.fetch(:host, nil)
-      @database_name = config.fetch(:database, nil)
-      @custom_message = custom_message
+    def initialize(config={}, options={}, custom_message = nil)
+      @config          = config
+      @host            = config.fetch(:host, nil)
+      @database_name   = config.fetch(:database, nil)
+      @custom_message  = custom_message
+      @original_error  = config.fetch(:original_error, nil)
     end
 
     def message
