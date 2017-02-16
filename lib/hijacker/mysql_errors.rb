@@ -18,7 +18,7 @@ module Hijacker
     RE_ACCESS_DENIED = /Access denied for user '([^']+)/
 
     def mysql_error(e)
-      if e.message.match(Hijacker::MysqlErrors::RE_UNRESPONSIVE_HOST)
+      error_type = if e.message.match(Hijacker::MysqlErrors::RE_UNRESPONSIVE_HOST)
         MYSQL_UNRESPONSIVE_HOST
       elsif e.message.match(Hijacker::MysqlErrors::RE_UNKNOWN_HOST)
         MYSQL_UNKNOWN_HOST
@@ -27,6 +27,9 @@ module Hijacker
       else
         MYSQL_GENERIC
       end
+
+      logger.debug "error discovered; #{error_type}"
+      error_type
     end
 
     def mysql_error_is?(e, value)
