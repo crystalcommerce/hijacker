@@ -17,15 +17,6 @@ module Hijacker
 
   DEFAULT_UNRESPONSIVE_DBHOST_COUNT_THRESHOLD = (APP_CONFIG[:unresponsive_dbhost_count_threshold] or 10).to_i
 
-  class UnparseableURL < StandardError;end
-  class InvalidDatabase < StandardError
-    attr_reader :database
-    def initialize(database, message = "Database #{database} not found")
-      @database = database
-      super(message)
-    end
-  end
-
   class << self
     attr_accessor :config, :master, :sister
     attr_writer :valid_routes
@@ -101,7 +92,7 @@ module Hijacker
         increment_unresponsive_dbhost(dbhost(conn_config))
         exception = UnresponsiveHostError.new(conn_config, {source_error: e})
       else
-        exception = e
+        exception = mysql_error(e).new(e)
       end
 
     rescue => e

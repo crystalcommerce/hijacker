@@ -1,5 +1,6 @@
 module Hijacker
-  class UnresponsiveHostError < StandardError
+  class GenericDbError < StandardError; end
+  class UnresponsiveHostError < GenericDbError
     attr_reader :config, :host, :database_name, :original_error, :custom_message
 
     def initialize(config={}, options={}, custom_message = nil)
