@@ -297,7 +297,7 @@ private
 
     if options[:check_responsiveness] and !dbhost_available?(dbhost(conn_config), {host_id: host.id})
       error = UnresponsiveHostError.new(conn_config)
-      logger.warn error.message
+      logger.warn "[Hijacker] error discovered; #{error.message}"
       raise error
     end
 
