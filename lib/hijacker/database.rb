@@ -140,8 +140,10 @@ class Hijacker::Database < Hijacker::BaseModel
         begin
           Hijacker.connect_to_master(db)
         rescue MissingDatabaseError
+          Hijacker.logger.debug "the #{db} database is missing"
           next
         rescue Hijacker::UnresponsiveHostError
+          Hijacker.logger.debug "the host associated with #{db} is unresponsive"
           raise unless options[:validate_unresponsive_hosts]
           next
         end
@@ -149,6 +151,7 @@ class Hijacker::Database < Hijacker::BaseModel
       end
     ensure
       begin
+        Hijacker.logger.debug "reconnecting to #{(original_database and original_database.attributes)}"
         Hijacker.connect_to_master(original_database)
       rescue MissingDatabaseError
       end

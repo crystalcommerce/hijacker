@@ -68,8 +68,10 @@ module Hijacker
 
       database = determine_database(target_name, sister_name)
 
+      logger.debug "establishing connection to #{database.attributes}"
       establish_connection_to_database(database, options[:slave])
 
+      logger.debug "checking connection to #{database.attributes} (actually make the connection)"
       check_connection
 
       if database.sister?
@@ -90,6 +92,7 @@ module Hijacker
 
       run_after_hijack_callback
 
+      logger.debug "#{database.host} was responsive; resetting counter"
       reset_unresponsive_dbhost(host_data(database.host))
 
     rescue Mysql2::Error => e
@@ -294,7 +297,7 @@ private
 
     if options[:check_responsiveness] and !dbhost_available?(dbhost(conn_config), {host_id: host.id})
       error = UnresponsiveHostError.new(conn_config)
-      logger.debug error.message
+      logger.warn error.message
       raise error
     end
 
