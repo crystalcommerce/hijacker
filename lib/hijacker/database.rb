@@ -155,7 +155,7 @@ class Hijacker::Database < Hijacker::BaseModel
       end
     ensure
       begin
-        Hijacker.logger.debug "reconnecting to #{(original_database and original_database.attributes)}"         
+        Hijacker.logger.debug "reconnecting to #{(original_database)}"
         Hijacker.connect_to_master(original_database)
       rescue MissingDatabaseError
       end

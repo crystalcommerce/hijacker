@@ -96,6 +96,11 @@ module Hijacker
           expect { Database.connect_each {} }.to raise_error(klass)
         end
       end
+
+      it "does not raise exception when attempting to connect to original database" do
+        allow(Hijacker).to receive(:current_client).and_return 'crystal_test'
+        expect { Database.connect_each([]) {} }.to_not raise_error
+      end
     end
   end
 end
