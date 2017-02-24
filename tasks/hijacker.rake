@@ -11,7 +11,7 @@ namespace :hijacker do
   task :setup_translation_table do |t, args|
     extend Hijacker::RedisKeys
 
-    default_filepath = "./example/host_translations.csv"
+    default_filepath = "#{File.expand_path(File.dirname(__FILE__))}/../example/host_translations.csv"
     custom_filepath = (args and args.extras and args.extras.length > 0 and File.exists?(args.extras[0]) and args.extras[0])
     filepath = (custom_filepath or default_filepath)
 
