@@ -12,8 +12,8 @@ Gem::Specification.new do |s|
   s.description = %q{Allows a single Rails appliation to access many different databases}
   s.email = %q{developers@crystalcommerce.com}
 
-  s.add_dependency("rails", ">= 2.3.14")
-  s.add_runtime_dependency("redis", "= 3.3.3")
+  s.add_dependency("rails", ">= 2.3.14", "< 4.0")
+  s.add_runtime_dependency("redis", "~> 3.0.7")
 
   s.add_development_dependency "bundler"
   s.add_development_dependency "guard"
