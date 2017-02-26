@@ -165,6 +165,10 @@ module Hijacker
       if host
         redis_reset_unresponsive_dbhost(host[:hostname]) if host.has_key?(:hostname)
         redis_remove_unresponsive_dbhost_id(host[:id]) if host.has_key?(:id)
+        true
+
+      else
+        false
       end
     end
       
