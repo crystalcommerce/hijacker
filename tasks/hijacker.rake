@@ -11,7 +11,7 @@ namespace :hijacker do
   task :setup_translation_table do |t, args|
     extend Hijacker::RedisKeys
 
-    redis_config = (args and args.extras and args.extras.length > 0 and !args.extras[0].nil? and File.exists?(args.extras[0]) and args.extras[0])
+    redis_config = (args and args.extras and args.extras.length > 0 and args.extras[0])
     if redis_config
       $hijacker_redis = Redis.new(JSON.load(redis_config))
     else
