@@ -11,8 +11,15 @@ namespace :hijacker do
   task :setup_translation_table do |t, args|
     extend Hijacker::RedisKeys
 
+    redis_config = (args and args.extras and args.extras.length > 0 and !args.extras[0].nil? and File.exists?(args.extras[0]) and args.extras[0])
+    if redis_config
+      $hijacker_redis = Redis.new(JSON.load(redis_config))
+    else
+      $hijacker_redis = Redis.new
+    end
+    
     default_filepath = "#{File.expand_path(File.dirname(__FILE__))}/../example/host_translations.csv"
-    custom_filepath = (args and args.extras and args.extras.length > 0 and File.exists?(args.extras[0]) and args.extras[0])
+    custom_filepath = (args and args.extras and args.extras.length > 1 and File.exists?(args.extras[1]) and args.extras[1])
     filepath = (custom_filepath or default_filepath)
 
     if File.exists?(filepath)
