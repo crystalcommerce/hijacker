@@ -30,8 +30,7 @@ namespace :hijacker do
       $hijacker_redis.del(redis_keys(:host_translations))
       data.each do |row|
         next unless row[:ipaddr] and row[:ipaddr].length > 0
-        $hijacker_redis.hmset("#{redis_keys(:host_translations)}:#{row[:ipaddr]}", :hostname, row[:hostname], :hostid, row[:hostid])
-        $hijacker_redis.sadd("#{redis_keys(:host_translations)}", row[:ipaddr])
+        $hijacker_redis.hset(redis_keys(:host_translations), row[:ipaddr], row[:hostname])
       end
     end
   end

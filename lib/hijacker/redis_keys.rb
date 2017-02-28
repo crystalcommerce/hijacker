@@ -132,14 +132,9 @@ module Hijacker
       end
     end
 
-    def redis_entry_key(host_ip_address)
-      "#{redis_keys(:host_translations)}:#{host_ip_address}"
-    end
-
     def redis_translation_table
       begin
-        ip_addresses = $hijacker_redis.smembers(redis_keys(:host_translations))
-        ip_addresses.inject({}){|h, ip_address| h.merge!(ip_address => $hijacker_redis.hgetall(redis_entry_key(ip_address)) )}
+        $hijacker_redis.hgetall(redis_keys(:host_translations))
       rescue
         {}
       end
@@ -165,24 +160,13 @@ module Hijacker
       if host
         redis_reset_unresponsive_dbhost(host[:hostname]) if host.has_key?(:hostname)
         redis_remove_unresponsive_dbhost_id(host[:id]) if host.has_key?(:id)
-        true
-
-      else
-        false
       end
     end
       
     # Translate from ip address to host name.  Simply return the ip address if
     # there is no matching translation.
     def translate_host_ip(host_ip_address)
-      host_info = redis_translation_table.fetch(host_ip_address, nil)
-      if host_info and host_info.has_key?(:hostname)
-        host_name = host_info.fetch(:hostname, host_ip_address)
-      else
-        host_name = host_ip_address
-      end
-
-      host_name
+      redis_translation_table.fetch(host_ip_address, host_ip_address)
     end
     
   end
