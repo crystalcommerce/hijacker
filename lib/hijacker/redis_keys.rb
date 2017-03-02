@@ -138,8 +138,7 @@ module Hijacker
 
     def redis_translation_table
       begin
-        ip_addresses = $hijacker_redis.smembers(redis_keys(:host_translations))
-        ip_addresses.inject({}){|h, ip_address| h.merge!(ip_address => $hijacker_redis.hgetall(redis_entry_key(ip_address)) )}
+        $hijacker_redis.hgetall(redis_keys(:host_translations))
       rescue
         {}
       end
