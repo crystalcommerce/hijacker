@@ -154,7 +154,7 @@ class Hijacker::Database < Hijacker::BaseModel
 
         begin
           yield db
-        rescue => e
+        rescue => error
           Hijacker.logger.warn "[Hijacker::Database] unable to yield code block for #{db}; #{error.message}"
           raise e unless options[:guard_all_yielded_exceptions]
         end

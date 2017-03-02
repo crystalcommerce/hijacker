@@ -3,7 +3,7 @@ PATH
   specs:
     dbhijacker (0.12.5)
       rails (>= 2.3.14)
-      redis (= 3.3.3)
+      redis (= 3.0.7)
 
 GEM
   remote: https://rubygems.org/
@@ -105,7 +105,7 @@ GEM
       ffi (>= 0.5.0)
     rdoc (3.12.2)
       json (~> 1.4)
-    redis (3.3.3)
+    redis (3.0.7)
     rspec (2.99.0)
       rspec-core (~> 2.99.0)
       rspec-expectations (~> 2.99.0)
