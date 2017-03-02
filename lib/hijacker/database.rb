@@ -133,6 +133,7 @@ class Hijacker::Database < Hijacker::BaseModel
   #
   def self.connect_each(sites = with_responsive_hosts.map(&:database), options={})
     options = {validate_connections: true, validate_unresponsive_hosts: true}.merge(options)
+    options = {guard_all_yielded_exceptions: false}.merge(options)
 
     original_database = Hijacker.current_client
     begin
@@ -151,7 +152,12 @@ class Hijacker::Database < Hijacker::BaseModel
           next
         end
 
-        yield db
+        begin
+          yield db
+        rescue => e
+          Hijacker.logger.warn "[Hijacker::Database] unable to yield code block for #{db}; #{error.message}"
+          raise e unless options[:guard_all_yielded_exceptions]
+        end
       end
     ensure
       begin
