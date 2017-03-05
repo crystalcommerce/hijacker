@@ -137,21 +137,30 @@ class Hijacker::Database < Hijacker::BaseModel
     original_database = Hijacker.current_client
     begin
       sites.each do |db|
-        begin
+
+        if defined?(Rails) && Rails.env.test?
+
           Hijacker.connect_to_master(db)
+          yield db
 
-        rescue Hijacker::UnresponsiveHostError => error
-          Hijacker.logger.warn "[Hijacker::Database] unable to connect to #{db}; #{error.message}"
-          raise unless(options[:validate_connections] and options[:validate_unresponsive_hosts])
-          next
+        else
+          begin
+            Hijacker.connect_to_master(db)
 
-        rescue => error # MissingDatabaseError
-          Hijacker.logger.warn "[Hijacker::Database] unable to connect to #{db}; #{error.message}"
-          raise unless options[:validate_connections]
-          next
+          rescue Hijacker::UnresponsiveHostError => error
+            Hijacker.logger.warn "[Hijacker::Database] unable to connect to #{db}; #{error.message}"
+            raise unless(options[:validate_connections] and options[:validate_unresponsive_hosts])
+            next
+
+          rescue => error # MissingDatabaseError
+            Hijacker.logger.warn "[Hijacker::Database] unable to connect to #{db}; #{error.message}"
+            raise unless options[:validate_connections]
+            next
+          end
+
+          yield db
         end
 
-        yield db
       end
     ensure
       begin
