@@ -1,6 +1,6 @@
 module Hijacker
   class BaseModel < ActiveRecord::Base
-    if Rails.env.test?
+    if defined?(Rails) && Rails.env.test?
       establish_connection({
         adapter: 'mysql2',
         username: 'root',
