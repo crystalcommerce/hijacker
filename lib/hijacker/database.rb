@@ -142,7 +142,8 @@ class Hijacker::Database < Hijacker::BaseModel
 
           Hijacker.connect_to_master(db)
           yield db
-
+          Hijacker.connect_to_master(original_database)
+          
         else
           begin
             Hijacker.connect_to_master(db)
