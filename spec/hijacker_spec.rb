@@ -6,6 +6,7 @@ describe Hijacker do
   include RedisKeysModule::Helper
   Hijacker.logger.level = 100 # keep the logging quiet during the tests
 
+
   let(:hosted_environments) { %w[staging production] }
 
   before(:each) do
@@ -418,7 +419,7 @@ describe Hijacker do
           #
           expect(Hijacker).to receive(:connection_config).exactly(7).times.and_call_original
 
-          expect(subject.redis_unresponsive_dbhost_count('bogus')).to eq 0
+          expect(subject.unresponsive_dbhost_count('bogus')).to eq 0
           expect(subject.dbhost_available?('bogus')).to be true
 
           # 1. unresponsive
@@ -432,7 +433,7 @@ describe Hijacker do
             end
           end
 
-          expect(subject.redis_unresponsive_dbhost_count('bogus')).to eq 3
+          expect(subject.unresponsive_dbhost_count('bogus')).to eq 3
           expect(subject.dbhost_available?('bogus')).to be false
         end
 
@@ -446,7 +447,7 @@ describe Hijacker do
             raise Mysql2::Error.new "Can't connect to MySQL server on '#{@unresponsive_host.hostname}' (111)" if @cnt <= 2
           end
 
-          expect(subject.redis_unresponsive_dbhost_count('bogus')).to eq 0
+          expect(subject.unresponsive_dbhost_count('bogus')).to eq 0
           expect(subject.dbhost_available?('bogus')).to be true
 
           # 1. unresponsive
@@ -459,7 +460,7 @@ describe Hijacker do
             end
           end
 
-          expect(subject.redis_unresponsive_dbhost_count('bogus')).to eq 0
+          expect(subject.unresponsive_dbhost_count('bogus')).to eq 0
           expect(subject.dbhost_available?('bogus')).to be true
         end
       end

@@ -112,7 +112,7 @@ module Hijacker
   end
 
   def self.host_data(host)
-    HashWithIndifferentAccess.new(host.attributes.select{|attr, value| %w{id hostname}.include?(attr.to_s) })
+    HashWithIndifferentAccess.new({ip_address: host.hostname, hostname: host.common_hostname})
   end
 
   def self.dbhost(conn_config)

@@ -17,6 +17,7 @@ ActiveRecord::Schema.define(:version => 2) do
 
   create_table "hosts", :force => true do |t|
     t.string "hostname"
+    t.string "common_hostname"
     t.integer "port", :default => 3306
   end
 end

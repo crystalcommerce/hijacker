@@ -70,9 +70,17 @@ module Hijacker
       end
     end
 
+    def set_unresponsive_dbhost_count_threshold(threshold_count)
+      begin
+        $hijacker_redis.set( redis_keys(:unresponsive_dbhost_count_threshold), threshold_count )
+      rescue
+        # do nothing if Redis is unavailable
+      end
+    end
+
     # Get the current count for the number of times requests were not able to
     # connect to a given database host
-    def redis_unresponsive_dbhost_count(db_host)
+    def unresponsive_dbhost_count(db_host)
       begin
         count = $hijacker_redis.hget( redis_keys(:unresponsive_dbhosts), db_host) unless db_host.nil?
         (count or 0).to_i
@@ -81,7 +89,23 @@ module Hijacker
       end
     end
     
-    def redis_add_unresponsive_dbhost_id(db_host_id)
+    def all_unresponsive_dbhosts
+      begin
+        $hijacker_redis.hgetall( redis_keys(:unresponsive_dbhosts) )
+      rescue
+        []
+      end
+    end
+    
+    def wipe_all_unresponsive_dbhosts
+      begin
+        $hijacker_redis.del( redis_keys(:unresponsive_dbhosts) )
+      rescue
+        # do nothing if Redis is unavailable
+      end
+    end
+    
+    def add_unresponsive_dbhost_id(db_host_id)
       begin
         $hijacker_redis.sadd( redis_keys(:unresponsive_dbhost_ids), db_host_id) unless db_host_id.nil?
       rescue
@@ -89,7 +113,7 @@ module Hijacker
       end
     end
     
-    def redis_unresponsive_dbhost_id_exists?(db_host_id)
+    def unresponsive_dbhost_id_exists?(db_host_id)
       begin
         $hijacker_redis.sismember( redis_keys(:unresponsive_dbhost_ids), db_host_id) unless db_host_id.nil?
       rescue
@@ -97,7 +121,7 @@ module Hijacker
       end
     end
     
-    def redis_all_unresponsive_dbhost_ids
+    def all_unresponsive_dbhost_ids
       begin
         $hijacker_redis.smembers( redis_keys(:unresponsive_dbhost_ids) ).map(&:to_i)
       rescue
@@ -105,7 +129,7 @@ module Hijacker
       end
     end
     
-    def redis_remove_unresponsive_dbhost_id(db_host_id)
+    def remove_unresponsive_dbhost_id(db_host_id)
       begin
         $hijacker_redis.srem( redis_keys(:unresponsive_dbhost_ids), db_host_id) unless db_host_id.nil?
       rescue
@@ -126,25 +150,31 @@ module Hijacker
     # Reset count for unresponsive db host
     def redis_reset_unresponsive_dbhost(db_host)
       begin
-        $hijacker_redis.hset(redis_keys(:unresponsive_dbhosts), db_host, 0) unless db_host.nil?
+        # I don't understand why it's necessary to delete the entry first, but
+        # the other simply is not working;  this definitely works
+        $hijacker_redis.pipelined do
+          $hijacker_redis.hdel(redis_keys(:unresponsive_dbhosts), db_host)
+          $hijacker_redis.hset(redis_keys(:unresponsive_dbhosts), db_host, 0)
+        end
       rescue
         # do nothing if Redis is unavailable
       end
     end
 
-    def redis_translation_table
+    def hosts_translation_table
       begin
-        $hijacker_redis.hgetall(redis_keys(:host_translations))
+        host_entries = host_class.select('hostname,common_hostname')
+        host_entries.inject({}){|h, entry| h.merge!(entry.hostname => (entry.common_hostname or entry.hostname))}
       rescue
         {}
       end
     end
 
     def dbhost_available?(host, options={})
-      available = (host and (redis_unresponsive_dbhost_count(host) < unresponsive_dbhost_count_threshold))
+      available = (host and (unresponsive_dbhost_count(host) < unresponsive_dbhost_count_threshold))
 
       if !available and options.has_key?(:host_id)
-        redis_add_unresponsive_dbhost_id(options[:host_id])
+        add_unresponsive_dbhost_id(options[:host_id])
       end
 
       available
@@ -156,10 +186,27 @@ module Hijacker
       end
     end
 
-    def reset_unresponsive_dbhost(host)
-      if host
-        redis_reset_unresponsive_dbhost(host[:hostname]) if host.has_key?(:hostname)
-        redis_remove_unresponsive_dbhost_id(host[:id]) if host.has_key?(:id)
+    # For apps that require hijacker and make use of it's own models, there's nothing to do
+    # For apps that provide their own models to access the crystal database (e.g., Support)
+    # this method will need to be over written in the class that extends RedisKeys
+    #
+    # e.g., 
+    #
+    # def self.host_class
+    #   ::Crystal::Host
+    # end
+    # 
+    def host_class
+      ::Hijacker::Host
+    end
+
+    def reset_unresponsive_dbhost(host_attrs)
+      hostname = (host_attrs and host_attrs[:ip_address])
+      host = (hostname and host_class.where(hostname: hostname).first)
+
+      if hostname and host
+        redis_reset_unresponsive_dbhost(hostname)
+        remove_unresponsive_dbhost_id(host.id)
         true
 
       else
@@ -170,7 +217,7 @@ module Hijacker
     # Translate from ip address to host name.  Simply return the ip address if
     # there is no matching translation.
     def translate_host_ip(host_ip_address)
-      redis_translation_table.fetch(host_ip_address, host_ip_address)
+      hosts_translation_table.fetch(host_ip_address, host_ip_address)
     end
     
   end
