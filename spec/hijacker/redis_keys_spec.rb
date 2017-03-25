@@ -59,13 +59,13 @@ describe Hijacker::RedisKeys do
       end
     end
 
-    describe "#redis_unresponsive_dbhost_count" do
+    describe "#unresponsive_dbhost_count" do
       it "should return the number of failed attempts to connect to a given db host" do
         $hijacker_redis.del(redis_keys(:unresponsive_dbhosts))
         
-        (1..12).each { redis_increment_unresponsive_dbhost(host) }
+        (1..12).each { increment_unresponsive_dbhost(host) }
         
-        expect(redis_unresponsive_dbhost_count(host)).to eq(12)
+        expect(unresponsive_dbhost_count(host)).to eq(12)
       end
     end
 

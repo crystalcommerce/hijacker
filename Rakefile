@@ -18,5 +18,3 @@ desc "Push latest gem version"
 task :release => :gem do
   sh "gem push pkg/#{spec.name}-#{spec.version}.gem"
 end
-
-import "./tasks/hijacker.rake"

@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    dbhijacker (0.12.5)
+    dbhijacker (0.12.4)
       rails (>= 2.3.14)
       redis (= 3.3.3)
 
@@ -148,4 +148,4 @@ DEPENDENCIES
   test-unit (~> 3.0)
 
 BUNDLED WITH
-   1.11.2
+   1.14.6
