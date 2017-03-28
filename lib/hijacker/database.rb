@@ -38,7 +38,7 @@ class Hijacker::Database < Hijacker::BaseModel
   alias_attribute :name, :database
 
   def self.cached_unresponsive_host_ids
-    Hijacker.redis_all_unresponsive_dbhost_ids
+    Hijacker.all_unresponsive_dbhost_ids
   end
 
   scope :with_responsive_hosts, ->(*_) {
