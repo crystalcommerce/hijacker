@@ -6,16 +6,17 @@
 # plenty of exception handling so that if Redis goes down, Hijacker doesn't add
 # to the chaos.  Basically, if Redis is available, use it; otherwise, make sure
 # the world doesn't come to an end.
-# 
+#
 module Hijacker
   module RedisKeys
+    DEFAULT_UNRESPONSIVE_DBHOST_COUNT_THRESHOLD = "hijacker:count_threshold"
 
     # Hash of database hosts that have been unresponsive for requests and the
     # count of such requests
     REDIS_UNRESPONSIVE_DBHOST_KEY = "hijacker:unresponsive-dbhosts"
 
     REDIS_UNRESPONSIVE_DBHOST_IDS_KEY = "hijacker:unresponsive-dbhost-ids"
-    
+
     # Hash of database host ip addresses with respective human friendly names
     REDIS_HOST_TRANSLATIONS_KEY = "hijacker:host-translations"
 
@@ -28,14 +29,14 @@ module Hijacker
     rescue
       "development"
     end
-    
+
     # Namespace the redis keys using the current Rails environment
     # e.g., 'test:some-key', 'development:some-key', etc.
     def self.redis_key(key)
       app_env = (ENV['RAILS_ENV'] || rails_env)
       "#{app_env}:#{key}"
     end
-    
+
     def rails_env
       Hijacker::RedisKeys.rails_env
     end
@@ -48,11 +49,11 @@ module Hijacker
     def redis_keys(key)
       Hijacker::RedisKeys::REDIS_KEYS[key]
     end
-    
+
     REDIS_KEYS = {
-      unresponsive_dbhosts: redis_key(REDIS_UNRESPONSIVE_DBHOST_KEY), 
-      unresponsive_dbhost_ids: redis_key(REDIS_UNRESPONSIVE_DBHOST_IDS_KEY), 
-      host_translations: redis_key(REDIS_HOST_TRANSLATIONS_KEY), 
+      unresponsive_dbhosts: redis_key(REDIS_UNRESPONSIVE_DBHOST_KEY),
+      unresponsive_dbhost_ids: redis_key(REDIS_UNRESPONSIVE_DBHOST_IDS_KEY),
+      host_translations: redis_key(REDIS_HOST_TRANSLATIONS_KEY),
       unresponsive_dbhost_count_threshold: redis_key(REDIS_UNRESPONSIVE_DBHOST_COUNT_THRESHOLD_KEY)
     }
 
@@ -88,7 +89,7 @@ module Hijacker
         0
       end
     end
-    
+
     def all_unresponsive_dbhosts
       begin
         $hijacker_redis.hgetall( redis_keys(:unresponsive_dbhosts) )
@@ -96,7 +97,7 @@ module Hijacker
         []
       end
     end
-    
+
     def wipe_all_unresponsive_dbhosts
       begin
         $hijacker_redis.del( redis_keys(:unresponsive_dbhosts) )
@@ -104,7 +105,7 @@ module Hijacker
         # do nothing if Redis is unavailable
       end
     end
-    
+
     def add_unresponsive_dbhost_id(db_host_id)
       begin
         $hijacker_redis.sadd( redis_keys(:unresponsive_dbhost_ids), db_host_id) unless db_host_id.nil?
@@ -112,7 +113,7 @@ module Hijacker
         # do nothing if Redis is unavailable
       end
     end
-    
+
     def unresponsive_dbhost_id_exists?(db_host_id)
       begin
         $hijacker_redis.sismember( redis_keys(:unresponsive_dbhost_ids), db_host_id) unless db_host_id.nil?
@@ -120,7 +121,7 @@ module Hijacker
         false
       end
     end
-    
+
     def all_unresponsive_dbhost_ids
       begin
         $hijacker_redis.smembers( redis_keys(:unresponsive_dbhost_ids) ).map(&:to_i)
@@ -128,7 +129,7 @@ module Hijacker
         []
       end
     end
-    
+
     def remove_unresponsive_dbhost_id(db_host_id)
       begin
         $hijacker_redis.srem( redis_keys(:unresponsive_dbhost_ids), db_host_id) unless db_host_id.nil?
@@ -136,7 +137,7 @@ module Hijacker
         # do nothing if Redis is unavailable
       end
     end
-    
+
     # Increment for a given database host the number of times requests were not
     # able to connect to a given database host
     def redis_increment_unresponsive_dbhost(db_host)
@@ -190,12 +191,12 @@ module Hijacker
     # For apps that provide their own models to access the crystal database (e.g., Support)
     # this method will need to be over written in the class that extends RedisKeys
     #
-    # e.g., 
+    # e.g.,
     #
     # def self.host_class
     #   ::Crystal::Host
     # end
-    # 
+    #
     def host_class
       ::Hijacker::Host
     end
@@ -213,12 +214,12 @@ module Hijacker
         false
       end
     end
-      
+
     # Translate from ip address to host name.  Simply return the ip address if
     # there is no matching translation.
     def translate_host_ip(host_ip_address)
       hosts_translation_table.fetch(host_ip_address, host_ip_address)
     end
-    
+
   end
 end
