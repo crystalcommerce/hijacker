@@ -1,21 +1,3 @@
 defaults: &defaults
   :host: localhost
   :port: 6379
-
-development:
-  <<: *defaults
-
-test:
-  <<: *defaults
-
-sister_test:
-  <<: *defaults
-
-cucumber:
-  <<: *defaults
-
-stage_production:
-  <<: *defaults
-
-production:
-  <<: *defaults
