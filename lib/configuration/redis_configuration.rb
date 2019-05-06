@@ -11,6 +11,6 @@ module RedisConfiguration
   def self.config_hash
     conf = YAML::load_file(File.dirname(__FILE__) + "/../../config/redis.yml")
 
-    conf.fetch('defaults')
+    conf.fetch(ENV.fetch('RAILS_ENV', 'development'))
   end
 end
