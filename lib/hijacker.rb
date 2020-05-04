@@ -18,7 +18,7 @@ module Hijacker
   DEFAULT_UNRESPONSIVE_DBHOST_COUNT_THRESHOLD = (APP_CONFIG[:unresponsive_dbhost_count_threshold] or 10).to_i
 
   class << self
-    attr_accessor :config, :master, :sister
+    attr_accessor :config, :master, :sister, :user_collection_id
     attr_writer :valid_routes
   end
 
@@ -214,6 +214,12 @@ module Hijacker
 
   def self.current_client
     sister || master
+  end
+
+  def self.current_user_collection_id
+    target_name = master
+    database = determine_database(target_name, nil)
+    @user_collection_id || database.user_collection_id 
   end
 
   def self.do_hijacking?
