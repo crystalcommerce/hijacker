@@ -87,17 +87,9 @@ module Hijacker
       reset_unresponsive_dbhost(host_data(database.host))
 
     rescue Mysql2::Error => e
-      if database and mysql_error_is?(e, MYSQL_UNRESPONSIVE_HOST)
-        conn_config = connection_config(database, slave_connection = false, {check_responsiveness: false})
-        increment_unresponsive_dbhost(dbhost(conn_config))
-        exception = UnresponsiveHostError.new(conn_config, {source_error: e})
-      else
-        exception = mysql_error(e).new(e)
-      end
-
+      exception = mysql_error(e).new(e)
     rescue => e
       exception = e
-
     ensure
       if exception
         if original_database.present?
