@@ -1,8 +1,9 @@
 PATH
-  remote: ../
+  remote: ..
   specs:
-    dbhijacker (0.7.3)
+    dbhijacker (0.12.5)
       rails (>= 2.3.14)
+      redis (= 3.3.5)
 
 GEM
   remote: https://rubygems.org/
@@ -31,7 +32,8 @@ GEM
       activeresource (= 2.3.18)
       activesupport (= 2.3.18)
       rake (>= 0.8.3)
-    rake (10.0.4)
+    rake (13.0.1)
+    redis (3.3.5)
 
 PLATFORMS
   ruby
