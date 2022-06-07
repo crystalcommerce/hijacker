@@ -187,13 +187,14 @@ module Hijacker
   end
 
   def self.database_configurations
-    ActiveRecord::Base.configurations
+    ActiveRecord::Base.configurations = YAML.load(File.read('config/database.yml'))
   end
 
   # this should establish a connection to a database containing the bare minimum
   # for loading the app, usually a sessions table if using sql-based sessions.
   def self.establish_root_connection
-    ActiveRecord::Base.establish_connection('root')
+    @dbconfig = YAML.load(File.read('config/database.yml'))
+    ActiveRecord::Base.establish_connection @dbconfig['root']
   end
 
   def self.processing_sister_site?
