@@ -59,7 +59,7 @@ class Hijacker::Database < Hijacker::BaseModel
   end
 
   def self.current
-    find(:first, :conditions => {:database => Hijacker.current_client})
+    find_by(database: Hijacker.current_client)
   end
 
   # returns a string or nil
