@@ -19,5 +19,7 @@ ActiveRecord::Schema.define(:version => 2) do
     t.string "hostname"
     t.string "common_hostname"
     t.integer "port", :default => 3306
+    t.string "proxy_hostname", :default => nil
+    t.integer "proxy_port", :default => nil
   end
 end

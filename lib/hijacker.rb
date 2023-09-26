@@ -280,8 +280,8 @@ private
   def self.connection_config(database, slave_connection = false, options={check_responsiveness: true})
     host = slave_connection ? database.host.slave : database.host
     host ||= database.host
-    hostname = host.hostname
-    port = host.port || root_config['port']
+    hostname = host.proxy_hostname.presence || host.hostname
+    port = host.proxy_port.presence || host.port || root_config['port']
     conn_config = root_config.merge('database' => database.name, 'host' => hostname, 'port' => port)
 
     if options[:check_responsiveness] and !dbhost_available?(dbhost(conn_config), {host_id: host.id})
