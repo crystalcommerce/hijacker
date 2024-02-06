@@ -79,12 +79,12 @@ module Hijacker
       # Do this even on a site without a master so we reconnect these models
       connect_sister_site_models(database.master || database)
 
-      reenable_query_caching
+      #reenable_query_caching
 
       run_after_hijack_callback
 
       logger.debug "#{database.host} was responsive; resetting counter"
-      reset_unresponsive_dbhost(host_data(database.host))
+      #reset_unresponsive_dbhost(host_data(database.host))
 
     rescue Mysql2::Error => e
       exception = mysql_error(e).new(e)

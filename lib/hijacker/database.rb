@@ -64,22 +64,23 @@ class Hijacker::Database < Hijacker::BaseModel
 
   # returns a string or nil
   def self.find_master_for(client, try_again=true)
-    @masters ||= {}
-    begin
-      @masters[client] ||= self.connection.select_values(
-        "SELECT master.database "\
-        "FROM `databases` AS master, `databases` AS sister "\
-        "WHERE sister.database = #{ActiveRecord::Base.connection.quote(client)} "\
-        "AND sister.master_id = master.id"
-      ).first
-    rescue ActiveRecord::ConnectionNotEstablished
-      ActiveRecord::Base.establish_connection('root')
-      if try_again
-        self.find_master_for(client, false) # one attempt only!
-      else
-        raise "Failed to establish connection"
-      end
-    end
+    client.to_s
+    #@masters ||= {}
+    #begin
+    #  @masters[client] ||= self.connection.select_values(
+    #    "SELECT master.database "\
+    #    "FROM `databases` AS master, `databases` AS sister "\
+    #    "WHERE sister.database = #{ActiveRecord::Base.connection.quote(client)} "\
+    #    "AND sister.master_id = master.id"
+    #  ).first
+    #rescue ActiveRecord::ConnectionNotEstablished
+    #  ActiveRecord::Base.establish_connection('root')
+    #  if try_again
+    #    self.find_master_for(client, false) # one attempt only!
+    #  else
+    #    raise "Failed to establish connection"
+    #  end
+    #end
   end
 
   # always returns a master, sister can be nil
