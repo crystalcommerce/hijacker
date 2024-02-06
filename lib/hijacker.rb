@@ -277,7 +277,7 @@ private
 
   # TODO: fold slave_connection into options hash; not sure what kind of impact
   # it would have to refactor that at this time since it was pre-existing.
-  def self.connection_config(database, slave_connection = false, options={check_responsiveness: true})
+  def self.connection_config(database, slave_connection = false, options={check_responsiveness: false})
     host = slave_connection ? database.host.slave : database.host
     host ||= database.host
     begin
