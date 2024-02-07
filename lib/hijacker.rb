@@ -244,10 +244,8 @@ private
       database = Hijacker::Database.find_by_name(sister_name)
       raise(Hijacker::InvalidDatabase.new(sister_name)) if database.nil?
       database
-    elsif valid_routes[target_name]
-      valid_routes[target_name] # cached valid database
     else
-      database = Hijacker::Alias.find_by_name(target_name).try(:database) || Hijacker::Database.find_by_name(target_name)
+      database = Hijacker::Alias.where(name: target_name).first.try(:database) || Hijacker::Database.where(database: target_name).first
       raise(Hijacker::InvalidDatabase.new(target_name)) if database.nil?
       database
     end
