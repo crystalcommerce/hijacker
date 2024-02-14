@@ -32,7 +32,7 @@ class Hijacker::Database < Hijacker::BaseModel
   has_many :aliases, :class_name => "Hijacker::Alias"
   belongs_to :master, :foreign_key => 'master_id', :class_name => 'Hijacker::Database'
   has_many :sisters, :foreign_key => 'master_id', :class_name => 'Hijacker::Database'
-  belongs_to :host, :class_name => "Hijacker::Host"
+  belongs_to :host, :foreign_key => 'host_id', :class_name => "Hijacker::Host"
 
   validates_uniqueness_of :database
 
