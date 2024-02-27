@@ -17,8 +17,9 @@ end
 
 class Hijacker::Database < Hijacker::BaseModel
   self.primary_key = :id
+  self.table_name = 'databases'
   attr_accessible :database, :master_id, :host_id, :solr_url
-  
+
   module MissingDatabaseError
     MYSQL_UNKNOWN_DB_ERRNO = 1049
 
