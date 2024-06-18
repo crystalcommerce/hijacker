@@ -81,6 +81,8 @@ module Hijacker
 
       #reenable_query_caching
 
+      reset_column_info_for_active_record
+
       run_after_hijack_callback
 
       #logger.debug "#{database.host} was responsive; resetting counter"
@@ -292,6 +294,15 @@ private
 
   def self.run_after_hijack_callback
     config[:after_hijack].call if config[:after_hijack]
+  end
+
+  # Reset column information to ensure models are up-to-date with the new schema.
+  # This ensures that any changes to the database schema are immediately
+  # in a multi-tenant architecture where different tenants might have
+  def self.reset_column_info_for_active_record
+    ::ActiveRecord::Base.descendants.each do |klass|
+      klass.reset_column_information
+    end
   end
 end
 
