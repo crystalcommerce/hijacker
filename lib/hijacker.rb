@@ -77,14 +77,16 @@ module Hijacker
       cache_database_route(target_name, database) unless sister_name
 
       # Do this even on a site without a master so we reconnect these models
-      connect_sister_site_models(database.master || database)
+      #connect_sister_site_models(database.master || database)
 
-      reenable_query_caching
+      #reenable_query_caching
+
+      reset_column_info_for_active_record
 
       run_after_hijack_callback
 
-      logger.debug "#{database.host} was responsive; resetting counter"
-      reset_unresponsive_dbhost(host_data(database.host))
+      #logger.debug "#{database.host} was responsive; resetting counter"
+      #reset_unresponsive_dbhost(host_data(database.host))
 
     rescue Mysql2::Error => e
       exception = mysql_error(e).new(e)
@@ -244,10 +246,8 @@ private
       database = Hijacker::Database.find_by_name(sister_name)
       raise(Hijacker::InvalidDatabase.new(sister_name)) if database.nil?
       database
-    elsif valid_routes[target_name]
-      valid_routes[target_name] # cached valid database
     else
-      database = Hijacker::Alias.find_by_name(target_name).try(:database) || Hijacker::Database.find_by_name(target_name)
+      database = Hijacker::Alias.where(name: target_name).first.try(:database) || Hijacker::Database.where(database: target_name).first
       raise(Hijacker::InvalidDatabase.new(target_name)) if database.nil?
       database
     end
@@ -277,9 +277,8 @@ private
 
   # TODO: fold slave_connection into options hash; not sure what kind of impact
   # it would have to refactor that at this time since it was pre-existing.
-  def self.connection_config(database, slave_connection = false, options={check_responsiveness: true})
-    host = slave_connection ? database.host.slave : database.host
-    host ||= database.host
+  def self.connection_config(database, slave_connection = false, options={check_responsiveness: false})
+    host = database.host
     hostname = host.hostname
     port = host.port || root_config['port']
     conn_config = root_config.merge('database' => database.name, 'host' => hostname, 'port' => port)
@@ -295,6 +294,15 @@ private
 
   def self.run_after_hijack_callback
     config[:after_hijack].call if config[:after_hijack]
+  end
+
+  # Reset column information to ensure models are up-to-date with the new schema.
+  # This ensures that any changes to the database schema are immediately
+  # in a multi-tenant architecture where different tenants might have
+  def self.reset_column_info_for_active_record
+    ::ActiveRecord::Base.descendants.each do |klass|
+      klass.reset_column_information
+    end
   end
 end
 

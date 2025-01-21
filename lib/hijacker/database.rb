@@ -33,7 +33,7 @@ class Hijacker::Database < Hijacker::BaseModel
   has_many :aliases, :class_name => "Hijacker::Alias"
   belongs_to :master, :foreign_key => 'master_id', :class_name => 'Hijacker::Database'
   has_many :sisters, :foreign_key => 'master_id', :class_name => 'Hijacker::Database'
-  belongs_to :host, :class_name => "Hijacker::Host"
+  belongs_to :host, :foreign_key => 'host_id', :class_name => "Hijacker::Host"
 
   validates_uniqueness_of :database
 
@@ -68,22 +68,23 @@ class Hijacker::Database < Hijacker::BaseModel
 
   # returns a string or nil
   def self.find_master_for(client, try_again=true)
-    @masters ||= {}
-    begin
-      @masters[client] ||= self.connection.select_values(
-        "SELECT master.database "\
-        "FROM `databases` AS master, `databases` AS sister "\
-        "WHERE sister.database = #{ActiveRecord::Base.connection.quote(client)} "\
-        "AND sister.master_id = master.id"
-      ).first
-    rescue ActiveRecord::ConnectionNotEstablished
-      ActiveRecord::Base.establish_connection('root')
-      if try_again
-        self.find_master_for(client, false) # one attempt only!
-      else
-        raise "Failed to establish connection"
-      end
-    end
+    client.to_s
+    #@masters ||= {}
+    #begin
+    #  @masters[client] ||= self.connection.select_values(
+    #    "SELECT master.database "\
+    #    "FROM `databases` AS master, `databases` AS sister "\
+    #    "WHERE sister.database = #{ActiveRecord::Base.connection.quote(client)} "\
+    #    "AND sister.master_id = master.id"
+    #  ).first
+    #rescue ActiveRecord::ConnectionNotEstablished
+    #  ActiveRecord::Base.establish_connection('root')
+    #  if try_again
+    #    self.find_master_for(client, false) # one attempt only!
+    #  else
+    #    raise "Failed to establish connection"
+    #  end
+    #end
   end
 
   # always returns a master, sister can be nil
