@@ -81,7 +81,7 @@ module Hijacker
 
       #reenable_query_caching
 
-      reset_column_info_for_active_record
+      reset_column_info_for_active_record(target_name)
 
       run_after_hijack_callback
 
@@ -299,8 +299,11 @@ private
   # Reset column information to ensure models are up-to-date with the new schema.
   # This ensures that any changes to the database schema are immediately
   # in a multi-tenant architecture where different tenants might have
-  def self.reset_column_info_for_active_record
-    ::ActiveRecord::Base.descendants.each do |klass|
+  def self.reset_column_info_for_active_record(target_name)
+    descendants = Rails.cache.fetch("#{target_name}/hijacker_descendants", expires_in: 12.hours) do
+      ::ActiveRecord::Base.descendants
+    end
+    descendants.each do |klass|
       klass.reset_column_information
     end
   end
