@@ -300,8 +300,11 @@ private
   # This ensures that any changes to the database schema are immediately
   # in a multi-tenant architecture where different tenants might have
   def self.reset_column_info_for_active_record(target_name)
-    descendants = Rails.cache.fetch("#{target_name}/hijacker_descendants", expires_in: 12.hours) do
-      ::ActiveRecord::Base.descendants
+    descendants_key = "#{target_name}/hijacker_descendants"
+    descendants = $redis.get(descendants_key)
+    if descendants.blank?
+      descendants = ::ActiveRecord::Base.descendants
+      $redis.setex(descendants_key, 12.hours,descendants)
     end
     descendants.each do |klass|
       klass.reset_column_information
