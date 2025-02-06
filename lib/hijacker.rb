@@ -46,7 +46,7 @@ module Hijacker
     database = nil
     exception = nil
     
-    logger.info "Hijacker connecting to target_name: #{target_name}, sister_name: #{sister_name}"
+    logger.debug "Hijacker connecting to target_name: #{target_name}, sister_name: #{sister_name}"
     begin
       raise InvalidDatabase.new(nil, 'master cannot be nil') if target_name.nil?
 
@@ -60,10 +60,10 @@ module Hijacker
 
       database = determine_database(target_name, sister_name)
 
-      logger.info "establishing connection to #{database.attributes}"
+      logger.debug "establishing connection to #{database.attributes}"
       establish_connection_to_database(database, options[:slave])
 
-      logger.info "checking connection to #{database.attributes} (actually make the connection)"
+      logger.debug "checking connection to #{database.attributes} (actually make the connection)"
       check_connection
 
       if database.sister?
