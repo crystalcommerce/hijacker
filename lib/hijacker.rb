@@ -241,7 +241,7 @@ private
 
   def self.determine_database(target_name, sister_name)
     if sister_name
-      database = Hijacker::Database.find_by_name(sister_name)
+      database = Hijacker::Alias.where(name: sister_name).first.try(:database) || Hijacker::Database.where(database: sister_name).first
       raise(Hijacker::InvalidDatabase.new(sister_name)) if database.nil?
       database
     else
