@@ -66,25 +66,19 @@ class Hijacker::Database < Hijacker::BaseModel
     find(:first, :conditions => {:database => Hijacker.current_client})
   end
 
-  # returns a string or nil
+  # returns a string or nil: the master's database name when +client+ is a
+  # sister site, otherwise nil (so callers treat the client as its own master).
+  #
+  # The body used to be commented out, leaving a dangling `client.to_s` whose
+  # value was returned — so every standalone DB was reported as its own sister
+  # (find_master_and_sister_for("x") => ["x","x"]), corrupting connect's
+  # sister bookkeeping and the already_connected? short-circuit. See core
+  # incident report 408 (2026-06-13): cross-tenant import on co-hosted DBs.
   def self.find_master_for(client, try_again=true)
-    client.to_s
-    #@masters ||= {}
-    #begin
-    #  @masters[client] ||= self.connection.select_values(
-    #    "SELECT master.database "\
-    #    "FROM `databases` AS master, `databases` AS sister "\
-    #    "WHERE sister.database = #{ActiveRecord::Base.connection.quote(client)} "\
-    #    "AND sister.master_id = master.id"
-    #  ).first
-    #rescue ActiveRecord::ConnectionNotEstablished
-    #  ActiveRecord::Base.establish_connection('root')
-    #  if try_again
-    #    self.find_master_for(client, false) # one attempt only!
-    #  else
-    #    raise "Failed to establish connection"
-    #  end
-    #end
+    db = find_by_database(client.to_s)
+    return nil if db.nil? || db.master_id.nil?
+    master = find_by_id(db.master_id)
+    master && master.database
   end
 
   # always returns a master, sister can be nil

@@ -93,13 +93,28 @@ module Hijacker
       exception = e
     ensure
       if exception
+        # On failure we restore the *connection* to where we started, so the
+        # master/sister bookkeeping must follow it — otherwise current_client
+        # keeps reporting the half-connected target while the live socket is
+        # elsewhere, and a later already_connected? can skip a needed switch.
+        # That desync is the root of the cross-tenant write in core incident
+        # report 408 (2026-06-13).
         if original_database.present?
           establish_connection_to_database(original_database)
+          if original_database.sister?
+            self.master = original_database.master.name
+            self.sister = original_database.name
+          else
+            self.master = original_database.name
+            self.sister = nil
+          end
         else
           self.establish_root_connection
+          self.master = nil
+          self.sister = nil
         end
 
-        raise exception 
+        raise exception
       end
     end
   end
